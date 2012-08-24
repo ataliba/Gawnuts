@@ -1,0 +1,6 @@
+
+* Help do Comando kill *
+=> Uso : .kill <usuario>
+=> Descricao : este comando mata a conexao do usuario 
+   especificado.
+

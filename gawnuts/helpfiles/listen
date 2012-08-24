@@ -1,0 +1,7 @@
+
+* Help do Comando listen *
+=> Uso : .listen 
+=> Descricao :  comando que ao contrario do comando ignore, permite 
+   ao usuario passar a receber mensagens de todos os outros conectados
+   ao talker.
+

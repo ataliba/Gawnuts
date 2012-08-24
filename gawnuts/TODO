@@ -1,0 +1,14 @@
+TODO LIST:
+
+For version 0.2:
+-> Execute changes in examine command 
+-> Take out all AWNUTS references and replace them with gawnuts references
+-> create the help files in portuguese language 
+
+For version 0.3 (usable code):
+-> translate all help files to english
+-> Make the prompt setting recorded in the user file,
+-> Make other changes in the user file 
+
+For version 1.0 ( the stable code ) :
+

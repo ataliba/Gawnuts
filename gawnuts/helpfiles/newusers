@@ -1,0 +1,7 @@
+
+* Help do Comando newusers *
+=> Uso : .newusers
+=> Descricao : este comando quando executao a primeira vez, fecha o
+   talker para novos usuarios e quando executado pela segunda vez,
+   abre o talker para novos usuarios.
+

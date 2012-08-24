@@ -1,0 +1,8 @@
+
+* Help do Comandoi access *
+=> Uso : .access
+=> Descricao : ao ser acionado a primeira vez, nao permite que outros
+   usuarios venham a tentar login no talker. ao ser acionado a segunda
+   vez, desfaz o primeiro comando, permitindo que outros usuarios
+   possam vir a ter acesso ao sistema de login do talker.
+

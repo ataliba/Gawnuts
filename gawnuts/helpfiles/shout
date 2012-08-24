@@ -1,0 +1,7 @@
+
+* Help do Comando shout *
+=> Uso : .shout
+=> Descricao : este comando manda uma mensagem do usuario 
+   para todas as salas do talker, como se o mesmo estivesse 
+   gritando e o som pudesse ser ouvido ao longe.
+

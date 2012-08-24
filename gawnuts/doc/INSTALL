@@ -1,0 +1,34 @@
+INSTALL 
+
+1) To choose the port just edit system/init_data and change the first
+token ( 3336 by default ) to whatever is the port number you want ( if
+you need more information about the init file, go to the doc dir, and
+read the file README.init_file )
+2)To compile this software, you use the shell script go or the gmake.
+If you use the go script, you need to execute this commands :
+  - cd src
+  - sh go -all
+  - to see other options of go, type go -help
+
+If you use the command make, you need to execute this commands :
+  - cd src
+  - type  'gmake'
+  - mv gawnuts ../
+  - cd ..
+  - gawnuts or ./gawnuts 
+  
+3) There is a default user named Test with password Test. You must:
+	a) enter with his name and password;
+	b) change the password with the .passwd command;
+	c) get out;
+	d) edit the file 'passfile' and change "Test" to your nickname;
+	e) rename file 'userdata/Test.D' to 'userdata/<Your nick>.D;
+	f) enter now with your nickname.  
+
+There is no more documentation yet. Remember this is NOT a final version. 
+If you have any questions, please:
+1) Read the TODO;
+2) If not solved, Read the code;
+3) If not solved, check if you're using the last version of gawnuts;
+4) If you are, please e-mail me with your question.
+

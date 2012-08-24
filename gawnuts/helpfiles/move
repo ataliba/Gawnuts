@@ -1,0 +1,6 @@
+
+* Help do Comando move *
+=> Uso : .move <usuario> <local>
+=> Descricao : move o usuario de um local para outro, ou seja, move o
+   usuario para o local especificado no comando.
+

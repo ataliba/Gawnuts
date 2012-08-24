@@ -1,0 +1,8 @@
+
+* Help do Comando wipe *
+=> Uso : .wipe <numero de linhas a serem deletadas>
+=> Descricao : comando que deleta o numero de mensagens no 
+   quadro que foram pedidas no comando. como cada mensagem 
+   eh uma linha, o numero de linhas ira ser o numero de mensagens
+   deletadas.
+

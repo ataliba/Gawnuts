@@ -1,0 +1,6 @@
+
+* Help do Comando examine *
+=> Uso : .examine <usuario>
+=> Descricao : mostra os dados do usuario que esta especificado na
+   linha de comando.
+

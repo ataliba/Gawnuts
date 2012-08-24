@@ -1,0 +1,7 @@
+
+* Help do Comando desc *
+=> Uso : .desc ou .desc <descricao>
+=> Descricao : quando executado somente o .desc solitariamente ele
+   mostra a descricao atua do usuario e .desc <descricao> coloca a
+   descricao que o usuario quiser.
+

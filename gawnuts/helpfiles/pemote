@@ -1,0 +1,8 @@
+
+* Help do Comando pemote *
+=> Uso : .pemote <usuario> <emocao a exprimir>
+=> Descricao : equivalente ao comando emote e semote, que exprime uma
+   emoca que o usuario esteja querendo demonstrar. A diferenca eh que
+   neste caso, somente o usuario especificado no comando vai saber o
+   que voce esta sentindo, sendo uma mensagem em privado.
+

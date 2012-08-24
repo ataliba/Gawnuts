@@ -1,0 +1,21 @@
+=====================================================================
+=                             TalkerFaq                             =
+=====================================================================
+Um talker eh um programa que trata da comunicacao entre seus usuarios
+atraves de uma rede. Para isso usa os sockets do protocolo TCP/IP ( o que eh
+usado pela internet e originalmente desenvolvido no ambiente Unix ). A 
+comunicacao eh feita atraves do intercambio de mensagens ( strings na
+giria da informatica ). Pode ser entendido como um chat, mas este tipo de
+comunicacao vai um pouco alem dos mesmos.
+
+Para se comunicar dentro de um talker, digite o que voce quer falar e
+tecle enter. logo apos todos os usuarios terao acesso ao que voce esta
+falando. para maiores informacoes sobre os comandos do talker, digite
+.help ou .help comando. qualquer duvida sobre a utilizacao do talker,
+mande um smail para ironwood, via comando .smail ironwood
+
+maiores informacoes sobre este sistema tambem podem ser conseguidos em 
+http://www.ataliba.eti.br/txts/docs/talkers
+
+=====================================================================
+

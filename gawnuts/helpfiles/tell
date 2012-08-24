@@ -1,0 +1,8 @@
+
+* Help do Comando tell *
+=> Uso : .tell <usuario> <mensagem>
+=> Descricao : este comando manda uma mensagem em privado 
+   para o usuario que for especificado no comando. lembre-se
+   que o usuario que voce quer contactar, necessariamente deve
+   estar conectado ao talker naquele momento.
+

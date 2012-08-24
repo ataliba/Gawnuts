@@ -1,0 +1,7 @@
+
+* Help do Comando letmein *
+=> Uso : .letmein <local>
+=> Descricao : comando que pede permissao para entrar em uma sala, 
+   util quando uma sala esta configurada como privada e voce precisa
+   ir ao local. 
+

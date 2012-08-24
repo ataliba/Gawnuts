@@ -1,0 +1,8 @@
+
+* Help do Comando sayto *
+=> Uso : .sayto <usuario> <emocao a exprimir>
+=> Descricao : equivalente ao comando say, com a unica diferenca que o
+   mesmo mostra para qual usuario a mensagem foi direcionada. otimo
+   pra quando o talker se encontra muito cheio e precisamos de falar
+   com uma pessoa em especial.
+

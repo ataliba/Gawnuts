@@ -1,0 +1,7 @@
+
+* Help do Comando dmail *
+=> Uso : .dmail <numero de linhas a serem deletadas>/todas
+=> Descricao : deleta o numereo de linhas que estao na sua caixa de
+   email e, se usado a opcao todas, deleta todos os emails que estao
+   dentro de sua caixa.
+

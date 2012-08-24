@@ -1,0 +1,9 @@
+
+* Help do Comando semote *
+=> Uso : .semote <emocao a exprimir>
+=> Descricao : equivalente ao comando emote, que exprime uma emocao do
+   que o usuario esteja querendo demonstrar. A diferenca eh que
+   funciona como o comando shout, em que todos os usuarios do talker
+   poderao ver o que o usuario esta querendo demonstrar, como se
+   estivesse gritado o que esta sentindo.
+

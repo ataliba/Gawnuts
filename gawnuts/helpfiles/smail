@@ -1,0 +1,6 @@
+
+* Help do Comando smail *
+=> Uso : .smail <usuario> <mensagem>
+=> Descricao : manda um email para o usuario especificado na linha de
+   comando.
+

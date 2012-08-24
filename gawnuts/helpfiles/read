@@ -1,0 +1,7 @@
+
+* Help do Comando read *
+=> Uso : .read
+=> Descricao : le o quadro da sala onde o usuario esta. caso nao
+   haja nenhuma mensagem, o usuario recebera uma mensagem avisando
+   que o quadro esta vazio.
+

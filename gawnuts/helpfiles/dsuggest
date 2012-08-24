@@ -1,0 +1,7 @@
+
+* Help do Comando dsuggest *
+=> Uso : .dsuggest <numero de sugestoes a serem deletadas>
+=> Descricao : comando que deleta o numero de sugestoes que o 
+   programador achar que dever se deletada. comando somente 
+   disponivel para o usuario god.
+

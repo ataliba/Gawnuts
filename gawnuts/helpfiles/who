@@ -1,0 +1,9 @@
+
+* Help do Comando who *
+=> Uso : .who
+=> Descricao : este comando fornece uma listagem de todos 
+   os usuarios que estao no talker no momento. A listagem
+   do mesmo contem quais os usuarios estao conectados, quais
+   as salas em que os mesmos estao, e tambem a quantos minutos
+   estao ligados ao talker.
+

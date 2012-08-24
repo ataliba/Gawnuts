@@ -1,0 +1,19 @@
+v0.1
+ - change the references to awnuts to gawnuts
+ - change parts of the code 
+ - add some commands 
+ - change some "selva" references to "ironwood talker" references
+
+v0.2
+- change all references to "selva" to "ironwood talker" references
+- change some thing in the code 
+  * include the screens dir
+  * include some files of configurations
+- include the config dir ( all configurable files are in this dir )
+- include the commands 
+  * sayto
+  * talkers
+  * rules
+- change the command cls to the vt100 control characters
+- include the miscfiles dir 
+

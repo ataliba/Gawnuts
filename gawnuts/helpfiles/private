@@ -1,0 +1,7 @@
+
+* Help do Comando private *
+=> Uso : .private
+=> Descricao : configura a sala onde o usuario esta para privada.
+   eh necessario tambem que a sala em questao esteja permitindo a 
+   mudanca deste parametro.
+

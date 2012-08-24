@@ -1,0 +1,24 @@
+Format of the INITFILE:
+
+<port number> <no. of areas> <atmos on> <logging_on> <allow new> <mess life>
+<room name> <link> <status>
+.
+.
+.
+.
+
+The port number is the number of the port the talker runs on.
+The no. of areas is the number of areas you have defined (max 26)
+Atmos on is 1 or 0 depending on whether you want the atmospherics on or not.
+Ditto above for system logging.
+If allow new = 1 then new id's can be created else if 0 they can't.
+Mess life is how many days messages remain on the message boards befor being
+automatically erased.
+
+You then define the room names, their links to other rooms (using letters) and
+their status.
+
+Status = 0 - room can be set by uses to either private or public
+         1 - room is fixed to public
+         2 - room is fixed to private (ie for sysop (Wizards & gods) only use)
+

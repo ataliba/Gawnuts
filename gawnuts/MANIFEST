@@ -1,0 +1,34 @@
+The list of dirs and files in all gawnuts versions :
+
+-
+|- datadir 
+|- helpfiles
+|- maildir
+|- messboards
+|- config
+    |- screens
+    |- system
+|- config
+|- system
+|- userdata
+|- src
+|- doc
+|- screens
+
+
+explanation about the directories of this system :
+
+- datadir - contains the files have explanations about the rooms of your
+  talker
+- helpfiles - contains the helpfiles about your commands ( in portuguese or
+  english )
+- maildir - contains the smail files ( internal talker email system )
+- messboards - contains the message boards of your system ( creating when
+  your configure your system and running in the first time )  
+- config - contains all the configurable files of the system 
+- system - contains the system files ( init_data and passwd )
+- userdata - contains all the data of your users 
+- src - contains the source of gawnuts
+- doc - contains the documentation ( in txt ), about this talker base 
+- screens - contains the screens of the talker.
+

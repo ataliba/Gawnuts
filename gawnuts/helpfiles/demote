@@ -1,0 +1,8 @@
+
+* Help do Comando demote *
+=> Uso : .demote <user>
+=> Descricao : este comando retira um nivel do usuario 
+   especificado na linha de comando, ou seja, ele eh o 
+   contrario do comando promote. somente esta disponivel 
+   para usuarios de niveis mais altos no talker.
+

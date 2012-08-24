@@ -1,0 +1,8 @@
+
+* Help do Comando cls *
+=> Uso : .cls
+=> Descricao : este comando executa uma limpeza na tela 
+   do usuario, limpando-a para receber novas mensagens.
+   Equivalente ao comando cls do DOS, e ao clear, dos
+   Unixes.
+

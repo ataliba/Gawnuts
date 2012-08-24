@@ -1,0 +1,124 @@
+=====================================================================
+=                             TalkerFaq                             =
+=====================================================================
+
+=> O que eh um talker?
+
+Um talker eh um programa que trata da comunicacao entre seus usuarios
+atraves de uma rede. Para isso usa os sockets do protocolo TCP/IP ( o que
+eh usado pela internet e originalmente desenvolvido no ambiente Unix ).
+
+A comunicacao eh feita atraves do intercambio de mensagens ( strings na
+giria da informatica ). Pode ser entendido como um chat, mas este tipo de
+comunicacao vai um pouco alem dos mesmos.
+  	  	  	 
+=> De onde vieram os talkers?
+
+Os talkers vieram provavelmente com base no programa de Unix Talk. 
+Este eh um programa presente em todas ou quase todas as implementacoes 
+do Unix que permite a comunicação entre dois utilizadores.
+
+Os talkers sao uma melhoria deste programa, que alem de permitir a 
+comunicacao entre varios em vez de um so ainda permite fazer outras coisas.
+  	  	  	 
+=> Como posso conectar a um talker?
+
+Um talker reserva um local da maquina onde esta rodando onde os usuarios
+possam conectar. Para isto, eh necessario utilizar o comando telnet do Unix
+ou um outro programa que permita este tipo de acesso ( ver programas para
+acesso ), configurando para este fim, o local da maquina onde o talker se
+encontra.
+
+Por exemplo, este talker se encontra a rodar na maquina spunge.org ( um
+provedor de shell gratuitos ) e o talker estivesse a usar a porta 3636,
+fariamos : telnet spunge.org 3636 ( em Unix ).
+
+Quando a conexao fosse aceita, o talker iria nos pedir um nome de login e
+senha, para confirmar quem somos. Depois deste processo, poderiamos
+conversar com todas as pessoas que no mesmo estivessem conectadas.
+  	  	  	 
+=> O que é um nick?
+
+Os talkers usam duas coisas para a identificacao das pessoas que la se ligam. 
+Uma delas eh o nickname (abreviado para nick) e a outra a password.
+
+O nick eh a nossa identificacao principal nos talkers e eh atraves dele 
+que as pessoas que la estao falam conosco. Este nick pode ser quase tudo 
+o que quisermos (embora normalmente ha restricoes como por exemplo ter um 
+minimo e um maximo de caracteres ou nao ser permitido ter numeros, etc. 
+Isso varia de talker para talker.) e nao tem de ser o nosso nome proprio. 
+Normalmente usa-se um nome com que nós nos identificamos: desde uma 
+figura mitologica até um anagrama do nosso nome, etc.
+
+Por isso é que nao eh possivel haver duas pessoas com o mesmo nick, porque 
+assim nao seria possivel saber com quem eh que se queria falar, sendo por 
+isso o nick unico para cada pessoa.
+  	  	  	 
+=> Para que eh preciso a password?
+
+A password eh apenas como forma de segurança. Serve para uma pessoa 
+mal-intencionada nao entre num talker como se fosse outra e começasse a fazer 
+merda, isto eh, a ofender as outras pessoas ou a usar o seu poder.
+  	  	  	 
+=> Qual a diferença entre um talker e o IRC?
+
+A diferença principal eh que o IRC eh um protocolo especifico da familia de 
+protocolos que constitui a Internet, enquanto que os talkers nao tem um 
+protocolo proprio para eles, limitando-se a usar o protocolo principal 
+(o TCP/IP) e a desenvolver a sua propria maneira de comunicacao entre o 
+talker e o utilizador.
+  	  	  	 
+=> Qual o talker que devo escolher?
+
+Essa é uma pergunta dificil, pois ainda existe uma boa quantidade de 
+talkers em Portugal (se nao contarmos os estrangeiros eh claro). A melhor 
+maneira eh experimentar onde nos damos melhor: tanto pode ser num talker 
+cheio de gente e onde estejamos a falar com 10 pessoas ao mesmo tempo como 
+noutro mais pequeno e sossegado onde estamos só a ter um conversa talvez 
+mais privada com uma pessoa.
+
+Por isso a melhor maneira eh dar uma volta pelos talkers existentes e escolher 
+o(s) que agradam mais (pode-se sempre estar em todos, mas isso fica um 
+bocado confuso... ;-) ).
+  	  	  	 
+=> Depois de ter entrado num talker, como posso falar com as pessoas que 
+   lá estão?
+
+Os talkers dispoemm de vários comandos (vejam a lista), e normalmente os 
+comandos basicos sao iguais de talker para talker. Por isso o melhor 
+eh ver que comando eh mais apropriado para cada situacao.
+  	  	  	 
+=> Quero executar um comando mas o talker diz-me que nao o tenho. Porque?
+
+Uma das hipoteses eh ter-mos colocado o nome errado (ver comando .help) e 
+um comando com esse nome nao existir no talker. A outra eh o comando ser 
+para um nivel superior ao nosso, e por isso nao podermos ter acesso a ele.
+
+Se portanto, o comando so se encontra disponivel para um utilizador de 
+um dado nivel num talker os de nivel inferior nao podem usar esse dado 
+comando.
+  	  	  	 
+=> Como eh que sao organizados os niveis dentro dos talkers?
+
+Os talkers estão organizados de uma maneira hiearquizada, com diversos 
+niveis dentro de cada talker. (ver comando .ranks ).
+
+Estes niveis servem nomeadamente para compensar as pessoas que mais tempo 
+passam no talker, que melhor contribuem para o ambiente ou mesmo para a
+gestao 
+deste e por isso as promocoes podem acontecer de diversas formas: a mais comum 
+eh quando os gestores de um determinado talker decidem que a pessoa merece, 
+pode ser de uma forma automatica conforme o tempo que a pessoa passa no 
+talker, etc.
+
+Uma coisa que acontece com os novatos nos talkers eh andarem sempre a 
+pedinchar promocoes, isto nao leva a lado nenhum e pode mesmo levar as 
+pessoas a ficarem marcadas para quem se encontra ja ha mais tempo no 
+talker. Nao sao necessarios mais do que os comandos normais para começar 
+a conversar e a travar amizades dentro dos talkers, e é para isto mesmo 
+que os talkers servem: falar. Nao eh para la andar a pedirem promocoes.
+  	  	  	 
+Autor : tisf@camoes.rnl.ist.utl.pt
+
+=====================================================================
+

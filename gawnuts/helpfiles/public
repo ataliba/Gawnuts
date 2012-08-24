@@ -1,0 +1,7 @@
+
+* Help do Comando public *
+=> Uso : .public
+=> Descricao : configura a sala onde o usuario esta para publica.
+   eh necessario tambem que a sala em questao esteja permitindo a 
+   mudanca deste parametro.
+

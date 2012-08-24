@@ -1,0 +1,8 @@
+
+* Help do Comando emote *
+=> Uso : .emote <emocao a exprimir>
+=> Descricao : comando que exprime uma emocao que o usuario esteja 
+   querendo demonstrar, como por exemplo : "Usuario esta rindo".
+   Equivalente ao emote do irc, caso o usuario esteja familiarizado
+   com este tipo de comunicacao.
+

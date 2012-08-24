@@ -1,0 +1,10 @@
+
+* Help do Comando help *
+=> Uso : .help
+=> Descricao : este comando mostra uma listagem de todos os 
+   comandos disponiveis para cada um dos niveis do talker. Para um
+   help especifico de um comando, seu uso deve ser :
+   .help < comando >
+   para listagem dos comandos :
+   .help 
+

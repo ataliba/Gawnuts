@@ -1,0 +1,6 @@
+
+* Help do Comando delbug *
+=> Uso : .delbug <numero de bugs a serem deletados>
+=> Descricao : comando que deleta o numero de bugs que o usuario
+   necessitar. somente disponivel para o usuario god.
+
