@@ -1,5 +1,5 @@
 /******************************************************************************
- * Geek Awsome NUTS v. 0.2 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
+ * Geek Awsome NUTS v. 0.4 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
  * - This is LICENSED !! Read the LICENSE file to know more about it !!! 
  * - Este software eh licenciado !!! Leia o arquivo LICENSA para maiores 
  *   informacoes
@@ -44,7 +44,7 @@
 
 // definition of the talker 
 
-#define GAWVERSION "0.2"
+#define GAWVERSION "0.4"
 #define TALKERNAME "Mundo Gelado"
 
 // other scopes of the program 
@@ -214,7 +214,7 @@ int l,len,area,size,user,new_user,on;
 char inpstr[ARR_SIZE],filename[80],site_num[80];
 char *inet_ntoa();  /* socket library function */
 
-printf("\n=======================================================\n              GAWNUTS TALKER BOOTING \n     Ataliba Teixeira < gawnuts@ataliba.eti.br >\n=======================================================\n\n");
+printf("\n=======================================================\n              GAWNUTS TALKER BOOTING \n     Ataliba Teixeira < https://github.com/ataliba/Gawnuts >\n=======================================================\n\n");
 
 /* Make old system log backup */
 sprintf(filename,"%s.bak",SYSTEM_LOG);
@@ -342,13 +342,13 @@ while(1) {
 	        write_user(user,mess);
 	   
 	        if (!sys_access) {
-			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes. Caso deseje usar um talker, tente o Lovenets\n\n\r");
+			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes. Caso deseje usar um talker, tente a Selva\n\n\r");
 			write(accept_sock,mess,strlen(mess));
 			close(accept_sock);
 			continue;
 			}
 		if ((new_user=find_free_slot())==-1) {
-			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes \n\rCaso deseje realmente usar um talker, tente a conexao no NerdTalker - telnet spunge.org 3336\n\n\r");
+			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes \n\rCaso deseje realmente usar um talker, tente a conexao no NerdTalker - telnet cypher.ataliba.eti.br 3336\n\n\r");
 			write(accept_sock,mess,strlen(mess));
 			close(accept_sock);
 			continue;
@@ -474,6 +474,7 @@ char type[10];
 switch(inpstr[strlen(inpstr)-1]) {
 	case '?': strcpy(type,"pergunta");  break;
 	case '!': strcpy(type,"exclama");  break;
+	case ':)': strcpy(type,"sorri"); break;
 	default : strcpy(type,"diz");
 	}
 sprintf(mess,"Voce %s: %s",type,inpstr);
