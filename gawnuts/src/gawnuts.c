@@ -3019,6 +3019,9 @@ int user;
 FILE *fp;
 char filename[80];
 
+// changing the mails and reading mails to database 
+// this is made because the users are able to read the emails on a web interface 
+
 sprintf(filename,"%s/%s.M",MAILDIR,ustr[user].name);
 if (!(fp=fopen(filename,"r"))) {
 	write_user(user,"Voce nao tem mail nenhum!");
