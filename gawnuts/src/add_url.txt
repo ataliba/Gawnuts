@@ -1,0 +1,68 @@
+/*** add_url function ***/
+
+add_url(user,inpstr)
+int user;
+char *inpstr;
+{
+
+MYSQL my_connection;
+char the_query[100];
+int res;
+   
+if(strlen(inpstr) > 51) 
+     {
+	sprintf(mess,"=> [%s:ERROR]: Sua url esta muito grande ... impossivel inseri-la no banco de dados !!!",TALKERNAME);
+	write_user(user,mess);
+	return;
+     }
+
+if (!inpstr[0]) {
+	write_user(user,"Uso: .url <endereco>"); return;
+	}
+
+sprintf(the_query,"INSERT INTO gawnuts_urls(name,url) VALUES('%s','%s')",ustr[user].recap,inpstr);
+   
+   
+mysql_init(&my_connection);
+
+if(mysql_real_connect(&my_connection,MYSQL_HOST,MYSQL_USER,MYSQL_PASS,MYSQL_DB,0,NULL,0))
+     {   
+	sprintf(mess,"DB CONNECTION SUCCESS\n");
+	write_syslog(mess,1);
+	res = mysql_query(&my_connection,the_query);
+	if(!res)
+	  {
+	     sprintf(mess,"Insert %lu rows in the add_url_query\n",(unsigned long)mysql_affected_rows(&my_connection));
+	     write_syslog(mess,1);
+	  }
+	else
+	  {
+	     sprintf(mess,"Insert error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
+	     write_syslog(mess,1);
+	     mysql_close(&my_connection);
+	     sprintf(mess,"=> [%s:ERROR]: Impossivel executar a query no banco de dados .. nao eh possivel inserir urls neste momento ... \n\r",TALKERNAME);
+	     write_user(user,mess);
+	  }
+	
+	mysql_close(&my_connection);
+     }
+else
+     {   
+	sprintf(mess,"DB CONNECTION FAILED \n");
+	write_syslog(mess,1);
+	if(mysql_errno(&my_connection))
+	  {
+	     sprintf(mess,"Connection Error : %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
+	     write_syslog(mess,1);
+	  }
+	
+	sprintf(mess,"[%s:ERROR] : impossivel conectar a base de dados ... nao e' possivel adicionar urls neste momento \n",TALKERNAME);
+	write_user(user,mess);
+	return;
+     
+     }
+   
+/* send output */
+write_user(user,"=> Voce adicionou uma URL no talker!\n\r");
+
+}

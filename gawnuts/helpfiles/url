@@ -1,0 +1,8 @@
+
+* Help do Comando url *
+=> Uso : .url <endereco da pagina>
+=> Descricao : comando que adiciona um link na pagina do talker .
+   Exemplo : .url http://www.nerdsfromhell.eti.br
+   Ao adicionar nao esquecer do http://
+
+

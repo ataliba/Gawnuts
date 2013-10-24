@@ -1,0 +1,46 @@
+*** Help do comando set ***
+
+<========================================================>
+<               Opcoes do comando Set                    >
+<========================================================>
+< Comando    |        Descricao do comando               >
+<========================================================>
+< desc       |  descricao do usuario                     >
+< email      |  email do usuario                         >
+< www        |  pagina www do usuario                    > 
+< bday       |  dia do aniversario do usuario            >
+< age        |  idade do usuario                         >
+< gender     |  male/female                              >
+< loginmsg   |  mensagem de login quando o usario entra  >
+<            |  no talker                                >
+< outmsg     |  mensagem quando o usuario deixa o talker >
+< icq        |  numero de icq do usuario                 >
+< recap      |  modo com o seu nick vai ser mostrado no  >
+<            |  talker                                   >
+< prompt     |  prompt ligado ou desligado               >
+< echo       |  echo ligado ou desligado                 >
+< colors     |  cores ligadas ou desligadas              >
+< tf         |  usuario ou nao do programa tinyfuge      >
+<========================================================>
+< Uso : set <comando> <opcoes>                           >
+< Exemplo : set desc eu sou alguem                       >
+< Para maiores informacoes sobre o comando  digite       >
+< .help set                                              >
+<========================================================>
+
+Usos :
+.set desc < sua descricao >
+.set email < seu email >
+.set www < sua pagina >
+.set bday dia/mes/ano
+.set age < sua idade >
+.set loginmsg < sua mensagem de login >
+.set outmsg < sua mensagem de saida >
+.set prompt On/Off
+.set icq < seu numero >
+.set recap < seu nome recapeado >
+.set echo On/Off
+.set colors On/Off
+.set tf On/Off
+.set gender male/female ( masculino/feminino)
+
