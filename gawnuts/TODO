@@ -9,6 +9,18 @@ For version 0.3 (usable code):
 -> translate all help files to english
 -> Make the prompt setting recorded in the user file,
 -> Make other changes in the user file 
+-> Connection in a mysql database 
+-> A program to configure the talker
+-> Option for two languages
+
+For Version 0.4 :
+-> other website options 
+-> .last command
+-> colors and support for portuguese language 
+-> .uptime command
+
+
+
 
 For version 1.0 ( the stable code ) :
 

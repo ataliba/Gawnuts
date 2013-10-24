@@ -17,3 +17,18 @@ v0.2
 - change the command cls to the vt100 control characters
 - include the miscfiles dir 
 
+v0.3 :
+- include the connection to mysql database
+- the program Configure is developed 
+- deleted the file src/go
+- the new go program
+- changes in the Makefile
+- include the command .cbuff
+- include the commands .addnews and .dnews 
+- include the command .suicide
+- include the command .duser ( delete_user )
+- include the happy birthday function :-)
+- change the smail system
+- change the promote system 
+- some changes in very functions
+

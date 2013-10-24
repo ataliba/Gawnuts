@@ -1,0 +1,380 @@
+#!/bin/bash
+#
+###################################################################
+# Configure - a program to configure the gawnuts talker           #
+###################################################################                        
+# HomePage : http://gawnuts.codigolivre.org.br                    #
+# Author : Ataliba Teixeira < gawnuts@ataliba.eti.br >            #
+# Version : 0.1                                                   #
+#-----------------------------------------------------------------#
+# This program only exists to configure the talker base gawnuts.  # 
+#                                                                 #
+###################################################################
+# COPYRIGHT : THIS PROGRAM IS DISTRIBUTED UNDER GAWNUTS LICENSE   #
+###################################################################
+###################################################################
+
+# do not edit this variables
+
+GAWNUTS_VERSION="0.3"
+PROGRAM_LANG="Pt"
+NUTS_VERSION="2.3.0"
+MYSQL_H_FILE="mysql_data.h"
+GAWNUTS_DEFAULT_H_FILE="gawnuts_default.h"
+INIT_DATA_FILE="system/init_data"
+HOSTINFO_H="src/hostinfo.h"
+# VERSION_FILE="screens/version"
+
+# the functions of this program
+
+read_host_data()
+{
+  if [ "$PROGRAM_LANG" = "Pt" ]
+  then
+     THE_HOST="Informacoes atuais do Host"
+     ACCOUNT_NAME="Nome da Conta"
+     HOST_INFO="Informacoes do Host"
+     DATE_TIME="Data & Hora"
+	 WRITING_HOST_INFO_H="=> Escrevendo o arquivo $HOSTINFO_H"
+  else
+     THE_HOST="Current Host Information"
+     ACCOUNT_NAME="Account Name"
+     HOST_INFO="Host Info"
+     DATE_TIME="Date & Time"
+	 WRITING_HOST_INFO_H="=> Writing the archive $HOSTINFO_H"
+  fi
+  
+  
+  fullinfo=`uname -a`
+  if [ "$fullinfo" = "" ]; then fullinfo="Not Available"; fi
+  host=$HOSTNAME
+  if [ "$host" = "" ]; then host=`hostname`; fi
+  if [ "$host" = "" ]; then host=`uname -n`; fi
+  if [ "$host" = "" ]; then host=$HOST; fi
+  if [ "$host" = "" ]; then host="unknown"; fi
+  user=$USER
+  if [ "$user" = "" ]; then user=$LOGNAME; fi
+  if [ "$user" = "" ]; then user=`logname`; fi
+  if [ "$user" = "" ]; then user="unknown"; fi
+  system=`uname -s`
+  if [ "$machine" = "" ]; then machine=$MACHINE; fi
+  if [ "$machine" = "" ]; then machine="unknown"; fi
+  release=`uname -r`
+  if [ "$release" = "" ]; then release="unknown"; fi
+  machine=`uname -m`
+  if [ "$machine" = "" ]; then machine=$MACHINE; fi
+  if [ "$machine" = "" ]; then machine=$HOSTTYPE; fi
+  if [ "$machine" = "" ]; then machine=$hosttype; fi
+  if [ "$machine" = "" ]; then machine="unknown"; fi
+  timezone=$TZ
+  if [ "$timezone" = "" ]; then timezone="EST5EDT"; fi
+  
+  # remove old hostinfo.h
+  rm -f $HOSTINFO_H
+  #
+  echo "$WRITING_HOST_INFO_H"
+  echo " "
+  
+  echo "/* Information about the system of gawnuts */" > $HOSTINFO_H
+  echo "" >> $HOSTINFO_H
+  echo "#define COMPILE_BY       \"$user\"" >> $HOSTINFO_H
+  echo "#define COMPILE_HOST     \"$host\"" >> $HOSTINFO_H
+  echo "#define COMPILE_OSNAME   \"$system\"" >> $HOSTINFO_H
+  echo "#define COMPILE_HOSTTYPE \"$machine\"" >> $HOSTINFO_H
+  echo "#define COMPILE_RELEASE  \"$release\"" >> $HOSTINFO_H
+  echo "#define COMPILE_DATE     \"`date +%D`\"" >> $HOSTINFO_H
+  echo "#define COMPILE_TIME     \"`date +%T`\"" >> $HOSTINFO_H
+  echo "#define COMPILE_FULL     \"$fullinfo\"" >> $HOSTINFO_H
+  echo "" >> $HOSTINFO_H
+  
+  echo "$THE_HOST..."
+  echo " "
+  echo "$ACCOUNT_NAME : $user  ($user@$host)"
+  echo "$HOST_INFO    : $machine $system $release ($host)"
+  echo "$DATE_TIME  : `date +%D` at `date +%T`" 
+  echo "Timezone     : $timezone"
+  echo ""
+  
+}
+
+read_and_write_rooms()
+{
+ 
+ if [ "$PROGRAM_LANG" = "Pt" ]
+ then
+    PORT_NUMBER_MESS="=> Qual a porta em que seu talker ira rodar ? "
+    NUMBER_OF_ROOMS_MESS="=> Quantas salas o seu talker ira possuir ? "
+    ATMOS_MESS="=> Atmosfericos ? ( 1 para On / 0 para Off ) "
+    LOG_MESS="=> Sistema de Logging ? ( 1 para On / 0 para Off ) "
+    NEW_MESS="=> Novos Usuarios ? ( 1 para On / 0 para Off ) "
+    MESS_LIFE_MESS="=> Tempo de vida das mensagens ( em dias ) : "
+    ROOM_INIT_MESS="=> Leitura dos dados de cada sala "
+    ROOM_NAME_MESS="=> Qual o nome da sua sala ? "
+    ROOM_LINKS_MESS="=> Quais os links desta sua sala ? "
+    ROOM_STATUS_MESS="=> Qual o status da sua sala ? ( 0 = privada/publica | 1 = publica | 2 = privada ) : "
+ else
+    PORT_NUMBER_MESS="=> What's the port of your talker ? "
+    NUMBER_OF_ROOMS_MESS="=> How many rooms your talker has ? "
+    ATMOS_MESS="=> Atmospherics ? ( 1 for On / 0 for Off ) "
+    LOG_MESS="=> Logging System ? ( 1 for On / 0 for Off ) "
+    NEW_MESS="=> New Users ? ( 1 for On / 0 for Off ) "
+    MESS_LIFE_MESS="=> Days of life of your messages :  "
+    ROOM_INIT_MESS="=> Reading the data of your rooms "
+    ROOM_NAME_MESS="=> What's the name of your room ? "
+    ROOM_LINKS_MESS="=> What's the links of this room ? "
+    ROOM_STATUS_MESS="=> What's the status of this room ? ( 0 = private/public | 1 = public | 2 = private ) : "
+ fi
+  
+ echo -n "$PORT_NUMBER_MESS"
+ read PORT_NUMBER
+ 
+ echo -n "$NUMBER_OF_ROOMS_MESS"
+ read NUMBER_OF_ROOMS
+ 
+ echo -n "$ATMOS_MESS"
+ read ATMOS
+ 
+ echo -n "$LOG_MESS"
+ read LOGGING
+ 
+ echo -n "$NEW_MESS"
+ read NEW_USERS
+ 
+ echo -n "$MESS_LIFE_MESS"
+ read MESS_LIFE
+ 
+ echo "$PORT_NUMBER $NUMBER_OF_ROOMS $ATMOS $LOGGING $NEW_USERS $MESS_LIFE" > $INIT_DATA_FILE
+ 
+ echo " "
+ echo "$ROOM_INIT_MESS"
+
+ i=1
+
+ while [ $i -le $NUMBER_OF_ROOMS ]
+ do
+   
+   echo " " 
+   echo "=> Lendo os dados da sala numero $i : " 
+   echo -n "$ROOM_NAME_MESS"
+   read ROOM_NAME
+   
+  echo -n "$ROOM_LINKS_MESS"
+   read ROOM_LINKS
+   
+   echo -n "$ROOM_STATUS_MESS"
+   read STATUS_OF_ROOM
+   
+   echo "$ROOM_NAME $ROOM_LINKS $STATUS_OF_ROOM" >> $INIT_DATA_FILE
+   
+   i=`expr $i + 1`
+ 
+ done
+ 
+}
+
+body_eng()
+{
+  echo " "
+  echo "=> Welcome to the configuration program of the talker ... "
+  echo " "
+  echo -n "=> What's the name of your talker ? "
+  read TALKER_NAME
+  echo -n "=> Who is the developer of the talker ? "
+  read CREATOR_NAME
+  echo -n "=> The email of the developer : "
+  read CREATOR_EMAIL
+  echo -n "=> Type the host of MySQL : "
+  read MYSQL_HOST
+  echo -n "=> Type the your user in MySQL : "
+  read MYSQL_USER
+  echo -n "=> Type your database in MySQL : "
+  read MYSQL_DB
+  echo -n "=> Type your password in MySQL : "
+  read MYSQL_DB
+  echo -n "=> Type the path for your web pages directory : "
+  read WEB_PAGE_PATH
+  echo -n "=> Type the name of the super user of the talker : "
+  read SUPER_USER
+  
+  read_and_write_rooms
+  
+}
+
+body_pt()
+{
+  echo " "
+  echo "=> Seja bem vindo ao programa de configuracao do talker ... "
+  echo " " 
+  echo -n "=> Qual e' o nome do seu talker ? "
+  read TALKER_NAME
+  echo -n "=> Digite o nome do criador do talker : "
+  read CREATOR_NAME
+  echo -n "=> Digite o email do criador do talker : "
+  read CREATOR_EMAIL
+  echo -n "=> Digite o host onde esta o MySQL : "
+  read MYSQL_HOST
+  echo -n "=> Digite o usuario do MySQL : "
+  read MYSQL_USER
+  echo -n "=> Digite a seu banco de dados no MySQL : "
+  read MYSQL_DB
+  echo -n "=> Digite a sua senha no MySQL : "
+  read MYSQL_PASS
+  echo -n "=> Digite o caminho para o seu diretorio de paginas web : "
+  read WEB_PAGE_PATH
+  echo -n "=> Digite o nome do super usuario do talker : "
+  read SUPER_USER
+  
+  read_and_write_rooms
+  
+}
+
+write_archives()
+{
+   
+   cd src
+   
+   # delete the archive
+     rm -f messages_lang.h
+   
+   # create a simbolic link to real archive 
+   if [ "$PROGRAM_LANG" = "Pt" ]
+   then
+     ln -s messages_pt.h messages_lang.h
+     WRITING_MYSQL="=> Escrevendo o arquivo $MYSQL_H_FILE"
+	 WRITING_DEFAULT_H="=> Escrevendo o arquivo $GAWNUTS_DEFAULT_H_FILE"
+	 
+   else
+     ln -s messages_eng.h messages_lang.h
+	 WRITING_MYSQL="=> Writing the archive $MYSQL_H_FILE"
+	 WRITING_DEFAULT_H="=> Writing the archive $GAWNUTS_DEFAULT_H_FILE"
+	 
+   fi
+   
+   # writing the mysql file
+   echo " "
+   echo $WRITING_MYSQL
+   echo "/******************************************************************/" > $MYSQL_H_FILE
+   echo " " >> $MYSQL_H_FILE
+   echo "/************************************************************" >> $MYSQL_H_FILE
+   echo " * Definition of the web files of the site " >> $MYSQL_H_FILE
+   echo " * **********************************************************" >> $MYSQL_H_FILE
+   echo " * */" >> $MYSQL_H_FILE
+   echo " " >> $MYSQL_H_FILE
+   echo " " >> $MYSQL_H_FILE
+   echo "#define MYSQL_USER \"$MYSQL_USER\"" >> $MYSQL_H_FILE
+   echo "#define MYSQL_PASS \"$MYSQL_PASS\"" >> $MYSQL_H_FILE
+   echo "#define MYSQL_HOST \"$MYSQL_HOST\"" >> $MYSQL_H_FILE
+   echo "#define MYSQL_DB \"$MYSQL_DB\"" >> $MYSQL_H_FILE
+   echo " " >> $MYSQL_H_FILE
+   echo " " >> $MYSQL_H_FILE
+   echo "/**** define the path to the web page ***/ " >> $MYSQL_H_FILE
+   echo "#define WEBPAGEPATH \"$WEB_PAGE_PATH\"" >> $MYSQL_H_FILE
+ 
+   # writing the default_gawnuts.h file 
+
+   echo " "
+   echo $WRITING_DEFAULT_H
+   echo "/*" > $GAWNUTS_DEFAULT_H_FILE
+   echo " * the default data of the talker " >> $GAWNUTS_DEFAULT_H_FILE
+   echo " */ " >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   echo "// nuts default " >> $GAWNUTS_DEFAULT_H_FILE
+   echo "#define VERSION \"$NUTS_VERSION\" //NUTS version" >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   echo "// gawnuts default" >> $GAWNUTS_DEFAULT_H_FILE
+   echo "#define CODENAME \"GAWNUTS\"" >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   echo "// definition of the talker" >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   echo "#define GAWVERSION \"$GAWNUTS_VERSION\"" >> $GAWNUTS_DEFAULT_H_FILE
+   echo "#define TALKERNAME \"$TALKER_NAME\"" >> $GAWNUTS_DEFAULT_H_FILE
+   echo " " >> $GAWNUTS_DEFAULT_H_FILE
+   
+   
+   # writing the version file 
+   
+   cd ..
+   
+}
+
+compile_and_run_talker()
+{
+  
+  if [ "$PROGRAM_LANG" = "Pt" ]
+  then
+     COMPILE_ASK="=> Deseja compilar e rodar o seu talker ? (Sim ou Nao ) :  "
+     COMPILE_MESSAGE="=> Compilando o codigo do talker ... "
+     RUNNING_MESSAGE="=> Rodando o talker ... "
+     FINAL_MESSAGE="=> Obrigado por usar esta base para talkers ... "
+  else
+     COMPILE_ASK="=> You need to compile and run your talker now ? ( Yes ou No ) :  "
+     COMPILE_MESSAGE="=> Compiling the source code of the talker ... "
+     RUNNING_MESSAGE="=> Running the talker ... "
+     FINAL_MESSAGE="=> Thanks to use this talker base ... "
+  fi
+  
+  echo -n "$COMPILE_ASK"
+  read OPTION
+  
+  if [ "$OPTION" = "Yes" ]
+  then
+     GAWNUTS_STATUS="TRUE"
+  elif [ "$OPTION" = "Sim" ]
+  then
+     GAWNUTS_STATUS="TRUE"
+  fi
+  
+  if [ "$GAWNUTS_STATUS" = "TRUE" ]
+  then
+    echo " " 
+    echo $COMPILE_MESSAGE
+    cd src && make
+    echo $RUNNING_MESSAGE
+	cd ..
+	 killall -9 gawnuts
+	./gawnuts
+  else
+    echo $FINAL_MESSAGE
+  fi  
+    
+}
+
+# the body of the program 
+
+echo -ne '\033c'
+echo "================================================================================"
+echo "=                A Program to configure your talker                            ="
+echo "=           Ataliba Teixeira < gawnuts@ataliba.eti.br >                        ="
+echo "=                http://gawnuts.codigolivre.org.br                             ="
+echo "=                         GawNutsv$GAWNUTS_VERSION                                          ="
+echo "================================================================================"
+echo " "
+echo " "
+
+echo "=> Bilingue message ... "
+echo "=> What's the language of your talker ? ( Pt = Portuguese/ Eng= English)"
+echo "=> Qual a linguagem do seu talker ? ( Pt = Portugues / Eng = Ingles )"
+echo -n "=> "
+read PROGRAM_LANG
+
+read_host_data
+
+case $PROGRAM_LANG in 
+ "Pt")
+   body_pt
+   ;;
+ "Eng")
+   body_eng
+   ;;
+  *) 
+  echo "=> Thanks to use this program "
+    ;;
+esac
+
+# the function to write the archives in the source code directory
+
+write_archives 
+compile_and_run_talker
+
+# the end of the program 
