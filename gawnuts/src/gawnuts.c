@@ -63,6 +63,7 @@
 #include <time.h>
 #include <dirent.h>
 #include <sys/sysinfo.h>
+#include <sys/time.h>
 
 //#include "openssl/bio.h"
 //#include "openssl/err.h"
@@ -96,7 +97,7 @@
 #define RULESFILE "rules"
 #define WHATISTHISFILE "whatisthis"
 #define LASTUSERFILE "miscfiles/last_user"
-
+#define UPTIMEFILE "miscfiles/uptime"
 
 #define MAX_LAST_LINES 10
 
