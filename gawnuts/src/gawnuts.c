@@ -3441,3 +3441,21 @@ for (user=0;user<MAX_USERS;++user) {
 }      
 
 
+/*** Uptime command ***/
+uptime(user)
+int user;
+
+/* Conversion constants. */
+ const long minute = 60;
+ const long hour = minute * 60;
+ const long day = hour * 24;
+ const double megabyte = 1024 * 1024;
+ /* Obtain system statistics. */
+ struct sysinfo si;
+ sysinfo (&si);
+
+ sprintf ("system uptime : %ld days, %ld:%02ld:%02ld\n",  si.uptime / day, (si.uptime % day) / hour, (si.uptime % hour) / minute, si.uptime % minute);
+
+
+}
+
