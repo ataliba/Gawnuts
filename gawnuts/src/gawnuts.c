@@ -62,6 +62,8 @@
 #include <signal.h>
 #include <time.h>
 #include <dirent.h>
+#include <sys/sysinfo.h>
+
 //#include "openssl/bio.h"
 //#include "openssl/err.h"
 //#include "openssl/ssl.h"
@@ -1489,6 +1491,7 @@ switch(com_num) {
         case 51: talkers(user); break;
         case 52: rules(user); break;
         case 53: sayto(user,inpstr); break;
+	case 54: uptime(user); break;
         default: write_user(user,"O que?"); break;
 	}
 }
