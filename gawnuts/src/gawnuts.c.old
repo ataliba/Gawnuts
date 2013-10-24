@@ -1,5 +1,5 @@
 /******************************************************************************
- * Geek Awsome NUTS v. 0.3 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
+ * Geek Awsome NUTS v. 0.4 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
  * - This is LICENSED !! Read the LICENSE file to know more about it !!! 
  * - Este software eh licenciado !!! Leia o arquivo LICENSA para maiores 
  *   informacoes
@@ -36,6 +36,17 @@
  * because of the new libraries version...
  */
 
+// nuts default 
+#define VERSION "2.3.0" //NUTS version
+
+// gawnuts default 
+#define CODENAME "GAWNUTS"
+
+// definition of the talker 
+
+#define GAWVERSION "0.4"
+#define TALKERNAME "Mundo Gelado"
+
 // other scopes of the program 
 #include <stdio.h>
 #ifdef _AIX
@@ -45,23 +56,14 @@
 #include <sys/types.h>
 #include <sys/socket.h> 
 #include <sys/time.h>
-#include <sys/sysinfo.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <time.h>
 #include <dirent.h>
-#include "/usr/include/mysql/mysql.h"
-
-/*** the configurable libs **/ 
-
-#include "messages_lang.h"
-#include "mysql_data.h"
-#include "levels.h"
-#include "gawnuts_default.h"
-
-/*** the ssl libs ( for future versions ) ***/
+#include <sys/sysinfo.h>
+#include <sys/time.h>
 
 //#include "openssl/bio.h"
 //#include "openssl/err.h"
@@ -71,7 +73,6 @@
  * File and directory definitions 
  * **************************************************************
  * */
-
 #define DATADIR "datadir"
 #define SCREENSDIR "screens"
 #define INITFILE "system/init_data"
@@ -94,13 +95,15 @@
 #define TALKERS "talkers"
 #define VERSIONFILE "version"
 #define RULESFILE "rules"
-//#define LASTFILE "last"
-//#define HISTORYFILE "history"
 #define WHATISTHISFILE "whatisthis"
 #define LASTUSERFILE "miscfiles/last_user"
-#define SETFILE "screens/setfile"
+#define UPTIMEFILE "miscfiles/uptime"
 
 #define MAX_LAST_LINES 10
+
+
+/* level defs */
+#include "levels.h"
 
 /* other definitions */
 #ifndef FD_SETSIZE
@@ -114,19 +117,14 @@
 #define TIME_OUT 180  /* time out in seconds at login - can't be less than ALARM_TIME */
 #define IDLE_MENTION 30  /* Used in check_timeout(). Is in minutes */
 #define TOPIC_LEN 35 /* length of the topic string */ 
-#define DESC_LEN 40 /* length of the description string */
-#define TNAME_LEN 16 /* length of the name len */
-#define RECAP_NAME_LEN TNAME_LEN*4 /* length of the recap string */
+#define DESC_LEN 29 /* length of the description string */
+#define NAME_LEN 16 /* length of the name string */
 #define NUM_LINES 15  /* number of lines of conv. to store in areas */
 #define PRO_LINES 15  /* number of lines of profile user can store */
 #define PRINUM 2   /* no. of users in area befor it can be made private */
 #define PASSWORD_ECHO 1 /* set this to 1 if you want passwords echoed */
 #define CHAR_MODE_ECHO 0  /* see README about this */
 #define SALT "AB"  /* for password encryption */
-#define EMAIL_LEN 30 /* number of characters in email */ 
-#define WWW_LEN 50 /* number of characters in www len */
-#define TOTAL_TIME_LEN 40 /* length of time len */
-#define MAX_DB_TEXT 300 /* length of the text in the database */
 
 void sigcall();
 char *timeline();
@@ -137,11 +135,9 @@ char *command[]={
 ".private",".public",".invite",".emote",".areas",".letmein",".write",".read",
 ".wipe",".topic",".demote",".map",".kill",".shutdown",".search",
 ".review",".help",".bcast",".news",".prompt",".move",".access",".log",
-".semote",".pemote",".set",".newusers",".version",".entpro",".examine",".passwd",
+".semote",".pemote",".desc",".newusers",".version",".entpro",".examine",".passwd",
 ".dmail",".rmail",".smail",".wake",".promote",".cls", ".addbug", ".delbug", 
-".vbug", ".suggest", ".dsuggest", ".vsug", ".talkers", ".rules", ".sayto",
- ".status", ".desc", ".cbuff", ".addnews", ".sysinfo", ".dnews", ".duser", 
-".url","*"
+".vbug", ".suggest", ".dsuggest", ".vsug", ".talkers", ".rules", ".sayto", "*"
  };
 
 /* Alter this data to suit. It is the level of user that can run each command 
@@ -150,11 +146,10 @@ int com_level[]={
 0,0,2,1,1,1,0,
 1,2, 2,2,0,2,1,
 1,1,2,2,3,1,3,3,
-2,1,0,2,1,1,2,3,
-3,2,1,1,3,0,0,1,
+2,1,0,2,1,0,2,3,
+3,2,1,0,3,0,0,1,
 1,1,0,1,2,2,1,1,
-3,3,1,3,1,1,1,1,
-1,1,1,2,1,3,3,1     
+3,3,1,3,1,1,1,1     
 };
 
 char *syserror="Desculpe - um erro de sistema ocorreu";
@@ -163,8 +158,7 @@ char mess[ARR_SIZE];  /* functions use mess to send output */
 char mess2[ARR_SIZE]; /* for event functions output */
 char conv[MAX_AREAS][NUM_LINES][161]; /* stores lines of conversation in area*/
 char start_time[30];  /* startup time */
-char last_new_user[TNAME_LEN];
-char name_day[15]; 
+char last_new_user[NAME_LEN];
 
 int PORT,NUM_AREAS,num_of_users=0;
 int MESS_LIFE=7;  /* message lifetime in days */
@@ -181,31 +175,29 @@ int number_of_accounts=0; // number of accounts in the talker
 
 /* user structure */
 struct {
-	char buff[ARR_SIZE],name[TNAME_LEN],desc[DESC_LEN], recap[RECAP_NAME_LEN]; 
-	char login_name[TNAME_LEN],login_pass[TNAME_LEN];
+	char buff[ARR_SIZE],name[NAME_LEN],desc[DESC_LEN]; 
+	char login_name[NAME_LEN],login_pass[NAME_LEN];
 	char site[80],page_file[80];
 	char *pro_start,*pro_end;
-        int area,listen,level,file_posn,pro_enter,tmp_user_time;
-	int buffpos,sock,time,vis,invite,last_input, have_db;
-	int idle_mention,logging_in,attleft,prompt,age,tf,echo,colors;
-        char email[EMAIL_LEN], www[WWW_LEN], gender[10], loginmsg[DESC_LEN],bday[DESC_LEN];
-        char outmsg[DESC_LEN], icq[DESC_LEN];
+	int area,listen,level,file_posn,pro_enter;
+	int buffpos,sock,time,vis,invite,last_input;
+	int idle_mention,logging_in,attleft,prompt;
 	} ustr[MAX_USERS];
 
 /* area structure */
 struct {
-	char name[TNAME_LEN],topic[TOPIC_LEN+1],move[MAX_AREAS];
+	char name[NAME_LEN],topic[TOPIC_LEN+1],move[MAX_AREAS];
 	int private,status,mess_num,conv_line;
 	} astr[MAX_AREAS];
 
 // last structure 
-/* 
+ 
 struct 
 {
-   char name[TNAME_LEN], status[10];
+   char name[NAME_LEN], status[10];
    int date;
 } last_user[MAX_LAST_LINES];
-*/
+
 
 /**** START OF FUNCTIONS ****/
 
@@ -225,7 +217,7 @@ int l,len,area,size,user,new_user,on;
 char inpstr[ARR_SIZE],filename[80],site_num[80];
 char *inet_ntoa();  /* socket library function */
 
-printf("\n=======================================================\n              GAWNUTS TALKER BOOTING \n     Ataliba Teixeira < gawnuts@ataliba.eti.br >\n=======================================================\n\n");
+printf("\n=======================================================\n              GAWNUTS TALKER BOOTING \n     Ataliba Teixeira < https://github.com/ataliba/Gawnuts >\n=======================================================\n\n");
 
 /* Make old system log backup */
 sprintf(filename,"%s.bak",SYSTEM_LOG);
@@ -346,20 +338,20 @@ while(1) {
 		more(-1,accept_sock,MOTD1); /* send first message of the day */
 	        
 	        sprintf(mess,"Esta eh a casa de %d usuarios \n\r",number_of_accounts);
-	        write(accept_sock,mess,strlen(mess));
+	        write_user(user,mess);
 	        sprintf(mess,"Nosso ultimo usuario cadastrado foi ");
-	        write(accept_sock,mess,strlen(mess));
+	        write_user(user,mess);
 	        sprintf(mess,"%s \n\r",last_new_user);
-	        write(accept_sock,mess,strlen(mess));
+	        write_user(user,mess);
 	   
 	        if (!sys_access) {
-			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes. Caso deseje usar um talker, tente o Lovenets\n\n\r");
+			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes. Caso deseje usar um talker, tente a Selva\n\n\r");
 			write(accept_sock,mess,strlen(mess));
 			close(accept_sock);
 			continue;
 			}
 		if ((new_user=find_free_slot())==-1) {
-			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes \n\rCaso deseje realmente usar um talker, tente a conexao no NerdTalker - telnet spunge.org 3336\n\n\r");
+			strcpy(mess,"\n\rDesculpe, neste momento o talker nao esta aceitando novas conexoes \n\rCaso deseje realmente usar um talker, tente a conexao no NerdTalker - telnet cypher.ataliba.eti.br 3336\n\n\r");
 			write(accept_sock,mess,strlen(mess));
 			close(accept_sock);
 			continue;
@@ -455,8 +447,7 @@ while(1) {
 		/* deal with any commands */
 		com_num=get_com_num(inpstr);
 		if (com_num==-1 && inpstr[0]=='.') {
-		        sprintf(mess,"=> [%s:WARNING]: Comando desconhecido!",TALKERNAME);
-			write_user(user,mess);
+			write_user(user,"=> Comando desconhecido!");
 			prompt(user);  continue;
 			}
 		if (com_num!=-1) {
@@ -486,16 +477,19 @@ char type[10];
 switch(inpstr[strlen(inpstr)-1]) {
 	case '?': strcpy(type,"pergunta");  break;
 	case '!': strcpy(type,"exclama");  break;
+	case ':)': strcpy(type,"sorri"); break;
 	default : strcpy(type,"diz");
 	}
-sprintf(mess,"=> Voce %s: %s",type,inpstr);
+sprintf(mess,"Voce %s: %s",type,inpstr);
 write_user(user,mess);
 if (!ustr[user].vis) 
 	sprintf(mess,"Uma voz animalesca diz: %s\n\r",inpstr);
-else sprintf(mess,"=> %s diz: %s\n\r",ustr[user].name,inpstr);
+else sprintf(mess,"%s diz: %s\n\r",ustr[user].name,inpstr);
 write_alluser(user,mess,0,0);
 record(mess,ustr[user].area);
 }
+
+
 
 /*** Print prompt ***/
 prompt(user)
@@ -681,23 +675,24 @@ fclose(fp);
  *** boot of the program */
 
 add_last_new_user(user)
-char user[TNAME_LEN];
+char user[NAME_LEN];
 {
    
    FILE *archive;
-   char name[TNAME_LEN], filename[30];
+   char name[NAME_LEN], filename[30];
    
-   sprintf(filename,"%s\n",LASTUSERFILE);
+   sprintf(filename,"%s",LASTUSERFILE);
+   write_syslog(filename,0);
    if(!(archive = fopen(filename,"w")))
      {
 	sprintf(mess,"ERROR : couldn't open %s to write \n",LASTUSERFILE);
-	write_syslog(mess,1);
+	write_syslog(mess);
 	fclose(archive);
      }
    else
      {
 	sprintf(mess,"SUCCESS : open %s to write \n",LASTUSERFILE);
-	write_syslog(mess,1);
+	write_syslog(mess);
      }
    
    sprintf(mess,"%s",user);
@@ -744,7 +739,7 @@ counting_user(int i)
 process_last_user()
 {
    FILE *archive;
-   char filename[30], name[TNAME_LEN];
+   char filename[30], name[NAME_LEN];
    
    sprintf(filename,"%s",LASTUSERFILE);
    
@@ -769,7 +764,7 @@ int user;
 char *inpstr;
 {
 char line[81],name[ARR_SIZE],passwd[ARR_SIZE];
-char name2[TNAME_LEN],passwd2[TNAME_LEN];
+char name2[NAME_LEN],passwd2[NAME_LEN];
 int f=0;
 FILE *fp;
 
@@ -782,7 +777,7 @@ switch(ustr[user].logging_in) {
 	/* See if user entering password ... */
 	passwd[0]=0;
 	sscanf(inpstr,"%s",passwd);
-	if (strlen(passwd)>TNAME_LEN-1) {
+	if (strlen(passwd)>NAME_LEN-1) {
 		write_user(user,"\n\r=> Password muito grande...\n\n\r");  
 		attempts(user);  return;
 		}
@@ -859,7 +854,7 @@ switch(ustr[user].logging_in) {
 		write_user(user,"=> Este nome e muito pequeno!\n\n\r");
 		attempts(user);  return;
 		}
-	if (strlen(name)>TNAME_LEN-1) {
+	if (strlen(name)>NAME_LEN-1) {
 		write_user(user,"=> Ei, nao exagere, o nome esta muito grande...\n\n\r");
 		attempts(user);  return;
 		}
@@ -1042,21 +1037,16 @@ return -1;
 }
 
 
+
 /*** set up data for new user if he can get on ***/ 
 add_user(user)
 int user;
 {
 int i,u;
-char filename[80],timestr[31],sitestr[81],levstr[4],type[10];
-char tmp_user_time[TOTAL_TIME_LEN],tf[4],char_have_db[10],char_prompt[4],colors[4],echo[4];  
-char tmp_lastline[DESC_LEN*4],tmp_bday[DESC_LEN*4];
+char filename[80],timestr[31],sitestr[81],levstr[3],type[10];
 FILE *fp;
 
 timestr[0]=0;
-   
-strcpy(char_prompt,"1");
-strcpy(echo,"1");
-strcpy(colors,"0");
 
 /* see if already logged on */
 if ((u=get_user_num(ustr[user].login_name))!=-1 && u!=user) {
@@ -1068,23 +1058,13 @@ if ((u=get_user_num(ustr[user].login_name))!=-1 && u!=user) {
 	ustr[user].area=-1;
 	ustr[user].sock=-1;
 	ustr[user].logging_in=0;
-	look(u);  
-        prompt(u);
+	look(u);  prompt(u);
 	return;
 	}
 
 
 /* reset user structure */
 strcpy(ustr[user].name,ustr[user].login_name);
-strcpy(ustr[user].recap,ustr[user].login_name);
-strcpy(ustr[user].email,"NULL");
-strcpy(ustr[user].www,"NULL");
-strcpy(ustr[user].bday,"0/0/0");
-strcpy(ustr[user].gender,"NULL");
-strcpy(ustr[user].loginmsg,"NULL");
-strcpy(ustr[user].outmsg,"NULL");
-strcpy(ustr[user].icq,"NULL");
-ustr[user].age=ustr[user].colors=ustr[user].echo=0;
 ustr[user].area=0;
 ustr[user].listen=1;
 ustr[user].vis=1;
@@ -1094,13 +1074,7 @@ ustr[user].last_input=time((time_t *)0);
 ustr[user].logging_in=0;
 ustr[user].file_posn=0;
 ustr[user].pro_enter=0;
-ustr[user].prompt=1;
-ustr[user].echo=0;
-ustr[user].age=0;
-ustr[user].colors=0;   
-ustr[user].tf=0;
-ustr[user].have_db=0;   
-ustr[user].tmp_user_time=0;
+ustr[user].prompt=0;
 num_of_users++;
 
 /* Set socket to non-blocking. Not really needed but it does no harm. */
@@ -1110,49 +1084,19 @@ fcntl(ustr[user].sock,F_SETFL,O_NDELAY);
 sprintf(filename,"%s/%s.D",USERDATADIR,ustr[user].name);
 if (!(fp=fopen(filename,"r"))) {
 	ustr[user].level=NEWBIE;
-	strcpy(ustr[user].desc,"- um novato a tremer nos polos...");
+	strcpy(ustr[user].desc,"- um novato tremer nos polos...");
 	}
 else {
 	/* load data */
 	fgets(timestr,30,fp);
 	fgets(sitestr,80,fp);
 	fgets(ustr[user].desc,80,fp);
-	fgets(levstr,4,fp);
-	fgets(ustr[user].email,EMAIL_LEN-1,fp);
-        fgets(ustr[user].www,WWW_LEN-1,fp);
-        fgets(ustr[user].bday,39,fp);
-        fgets(ustr[user].gender,9,fp);
-        fgets(ustr[user].loginmsg,DESC_LEN-1,fp);
-        fgets(ustr[user].outmsg,DESC_LEN-1,fp);
-        fgets(ustr[user].icq,DESC_LEN-1,fp);
-        fgets(ustr[user].recap,(DESC_LEN*4)-1,fp);
-        fgets(char_have_db,9,fp);
-        fgets(char_prompt,3,fp);
-        fgets(echo,3,fp);
-        fgets(colors,3,fp);
-        fgets(tf,3,fp);
-        fgets(tmp_user_time,37,fp);
-        fclose(fp);
-        
-        ustr[user].have_db=atol(char_have_db);
-        ustr[user].prompt=atol(char_prompt);
-        ustr[user].echo=atol(echo);
-        ustr[user].colors=atol(colors);
+	fgets(levstr,2,fp);	
+	fclose(fp);
 	ustr[user].level=atoi(levstr);
-	ustr[user].tf=atoi(tf);
-        ustr[user].tmp_user_time=atoi(tmp_user_time);
-   
-        /* remove newlines */
-	timestr[strlen(timestr)-1]=0;
-        ustr[user].bday[strlen(ustr[user].bday)-1]=0;
-        ustr[user].desc[strlen(ustr[user].desc)-1]=0;
-        ustr[user].email[strlen(ustr[user].email)-1]=0;
-        ustr[user].www[strlen(ustr[user].www)-1]=0;
-        ustr[user].gender[strlen(ustr[user].gender)-1]=0;
-        ustr[user].loginmsg[strlen(ustr[user].loginmsg)-1]=0;
-        ustr[user].outmsg[strlen(ustr[user].outmsg)-1]=0;
-        ustr[user].icq[strlen(ustr[user].icq)-1]=0;
-        ustr[user].recap[strlen(ustr[user].recap)-1]=0;
+	/* remove newlines */
+	timestr[strlen(timestr)-1]=0; 
+	ustr[user].desc[strlen(ustr[user].desc)-1]=0;
 	}
 
 /* send intro stuff */
@@ -1161,9 +1105,9 @@ if (PASSWORD_ECHO) {
 	for(i=0;i<6;++i) write_user(user,"\n\n\n\n\n\n\n\n\n\n\r");
 	}
 switch(ustr[user].level) {
-	case NEWBIE: strcpy(type,"EMBRIAO ");  break;
-	case USER  : strcpy(type,"OVO ");  break;
-	case WIZARD: strcpy(type,"PINGUIM ");  break;
+	case NEWBIE: strcpy(type,"BONECO_DE_NEVE ");  break;
+	case USER  : strcpy(type,"FOCA ");  break;
+	case WIZARD: strcpy(type,"URSO_POLAR ");  break;
 	case GOD   : strcpy(type,"TUX ");
 	}
 sprintf(mess,"\n\n\n\rBem vindo  %s%s\n\n\r",type,ustr[user].name);
@@ -1180,7 +1124,7 @@ if(ustr[user].level == GOD)
    
 /* send 2nd message of the day */
 more(-1,ustr[user].sock,MOTD2);
-   
+
 /* check for mail */
 sprintf(filename,"%s/%s.M",MAILDIR,ustr[user].name);
 look(user);
@@ -1191,36 +1135,17 @@ if (fp=fopen(filename,"r")) {
 if (ustr[user].level==NEWBIE){
 	write_user(user,"\n\r** Digite .entpro e registre-se no Mundo dos Pinguins !!! **\n\r");
 }	
-      
+prompt(user);
+
 /* send message to other users and to file */
 if (ustr[user].name[0]!='?') {
-        if(strstr(ustr[user].loginmsg,"NULL"))
-	   {
-	      sprintf(mess,"=> [ ACABOU DE ENTRAR ]:%s %s\n\r",ustr[user].name,ustr[user].desc);
-	      write_alluser(user,mess,1,0);
-	   }
-	else
-	   {
-	      sprintf(mess,"=> [%s %s ]: %s\n\r",ustr[user].name,ustr[user].desc,ustr[user].loginmsg);
-	      write_alluser(user,mess,1,0);
-	   }
-	   
+	sprintf(mess,"=>[ ACABOU DE ENTRAR ]: %s %s\n\r",ustr[user].name,ustr[user].desc);
+	write_alluser(user,mess,1,0);
 	sprintf(mess,"%s ligou-se ao %s\n",ustr[user].name,TALKERNAME);
 	write_syslog(mess,1);
 	}
-
-if(test_bday(user))
-     {
-	sprintf(mess,"\n\r=> [%s:GREATINGS]: Parabens pelo seu aniversario:-) ",TALKERNAME);
-	write_user(user,mess);
-	sprintf(mess,"=> [%s:ANNOUNCE]: Hoje eh aniversario do usuario %s. Deem os parabens ele !!!\n\r",TALKERNAME,ustr[user].name);
-	write_alluser(user,mess,1,0);
-     }
-
-prompt(user);
 whowrite();
 }
-
 
 
 /*** Page a file out to user like unix "more" command ***/
@@ -1405,33 +1330,9 @@ user_exists(user,name)
 int user;
 char *name;
 {
-char line[80],name2[TNAME_LEN],tmp_user[ARR_SIZE];
+char line[80],name2[NAME_LEN];
 FILE *fp;
-DIR *dir;
-struct dirent *dp;
-   
-sprintf(tmp_user,"%s.D",name);
 
-   
-if((dir=opendir(USERDATADIR))==NULL)
-     {
-	sprintf(mess,"Erro ao abrir o diretorio %s para leitura da funcao user_exists()\n",USERDATADIR);
-	write_syslog(mess,1);
-     }
-else
-     {   
-	while(dp=readdir(dir))
-	  {
-	     if(!strcmp(dp->d_name,".") || !strcmp(dp->d_name,"..") || !strcmp(dp->d_name,".D")) continue;
-	     if(strstr(dp->d_name,tmp_user)) 
-		{
-		   (void)closedir(dir);
-		   return 1;
-		}
-	  }
-        (void)closedir(dir);
-     }
-   
 if (!(fp=fopen(PASSFILE,"r"))) {
 	sprintf(mess,"%s : Nao consigo abrir o seu arquivo de password...",syserror);
 	write_user(user,mess);
@@ -1454,137 +1355,21 @@ save_stats(user)
 int user;
 {
 time_t tm_num;
-char timestr[30],filename[80],cons_sql[300];
+char timestr[30],filename[80];
 FILE *fp;
-MYSQL my_connection;
-int res,tm,min;
 
-time((long*)&tm);
-min=((tm-ustr[user].time)/60)+ustr[user].tmp_user_time;   
 if (!strcmp(ustr[user].name,"?")) return 1;
 sprintf(filename,"%s/%s.D",USERDATADIR,ustr[user].name);
 if (!(fp=fopen(filename,"w"))) return 0;
 time(&tm_num);
-strcpy(timestr,ctime(&tm_num));   
-   
-   
-if(!ustr[user].have_db)
-     sprintf(cons_sql,"INSERT INTO gawnuts_users(user_date,ip,description,level,email,site_web,bday,gender,icq,name,user_time) VALUES('%s','%s','%s','%d','%s','%s','%s','%s','%s','%s','%d')",timestr,ustr[user].site,ustr[user].desc,ustr[user].level,ustr[user].email,ustr[user].www,ustr[user].bday,ustr[user].gender,ustr[user].icq,ustr[user].name,min);
-else          
-     sprintf(cons_sql,"UPDATE gawnuts_users SET user_date='%s',ip='%s',description='%s',level='%d',email='%s',site_web='%s',bday='%s',gender='%s',icq='%s',name='%s',user_time='%d' WHERE name='%s'",timestr,ustr[user].site,ustr[user].desc,ustr[user].level,ustr[user].email,ustr[user].www,ustr[user].bday,ustr[user].gender,ustr[user].icq,ustr[user].name,min,ustr[user].name);
-   
-mysql_init(&my_connection);
-if(mysql_real_connect(&my_connection,MYSQL_HOST,MYSQL_USER,MYSQL_PASS,MYSQL_DB,0,NULL,0))
-     {
-	write_syslog("DB CONNECTION SUCCESS\n",1);
-        res = mysql_query(&my_connection,cons_sql);
-	if(!res)
-	  {
-	     sprintf(mess,"Insert %lu rows in the save_stats_query\n",(unsigned long)mysql_affected_rows(&my_connection));
-	     ustr[user].have_db=1;
-	     write_syslog(mess,1);
-	  }
-	else
-	  {
-	     sprintf(mess,"Insert error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	  }
-        mysql_close(&my_connection);
-     }
-else
-     {
-	sprintf(mess,"DB Connection Failed\n");
-	write_syslog(mess,1);
-	if(mysql_errno(&my_connection))
-	  {
-	     sprintf(mess,"Connection Error %d : %s\n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	  }
-     }
-   
-
-   
-fprintf(fp,"%s%s\n%s\n%d\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n%d\n%d\n%d\n%d\n%d\n",timestr,ustr[user].site,ustr[user].desc, ustr[user].level,ustr[user].email,ustr[user].www,ustr[user].bday,ustr[user].gender,ustr[user].loginmsg,ustr[user].outmsg,ustr[user].icq,ustr[user].recap,ustr[user].have_db,ustr[user].prompt,ustr[user].echo,ustr[user].colors,ustr[user].tf,min);
-fclose(fp);   
-
+strcpy(timestr,ctime(&tm_num));
+fprintf(fp,"%s%s\n%s\n%d\n",timestr,ustr[user].site,ustr[user].desc,ustr[user].level);
+fclose(fp);
 return 1;
 }
 
-status(user,inpstr)
-int user;
-char *inpstr;
-{
-   
-   char tmp[10],user3[DESC_LEN];
-   int u;
-   
-   inpstr[0]=toupper(inpstr[0]);
-   
-   if(((u=get_user_num(inpstr))==-1))
-     {
-	sprintf(mess,"=> [%s:Oops]: Somente o proprio usuario pode ver seu status!!!! ",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-    sprintf(mess,"\n\r============================================================\n\r");
-    write_user(user,mess);
-    sprintf(mess,"=> Profile do usuario %s \n\r",ustr[user].recap);
-    write_user(user,mess);
-    sprintf(mess,"============================================================\n\r");
-    write_user(user,mess);
-    sprintf(mess,"=> Descricao : %s\n\r=> Pagina WWW : %s \n\r",ustr[user].desc,ustr[user].www);
-    write_user(user,mess);
-    sprintf(mess,"=> O seu aniversario e': %s\n\r=> Sua mensagem de login e' : %s\n\r",ustr[user].bday,ustr[user].loginmsg);
-    write_user(user,mess);
-    if(strstr(ustr[user].gender,"Male"))
-      sprintf(tmp,"%s","Masculino");
-    else
-      sprintf(tmp,"%s","Feminino");
-    sprintf(mess,"=> Sua mensagem de saida do talker e' : %s \n\r=> Seu sexo e' %s \n\r",ustr[user].outmsg,tmp);
-    write_user(user,mess);
-    sprintf(mess,"=> Seu icq e' : %s \n\r=> Seu recap de nick e' : %s\n\r",ustr[user].icq,ustr[user].recap);
-    write_user(user,mess);
-    sprintf(mess,"=> Sua idade e' : %d anos\n\r",ustr[user].age);
-    if(ustr[user].prompt)
-      strcpy(tmp,"On");
-    else
-      strcpy(tmp,"Off");
-    sprintf(mess,"=> Prompt %s -",tmp);
-    write_user(user,mess);
-    if(ustr[user].echo)
-      strcpy(tmp,"On");
-    else
-      strcpy(tmp,"Off");
-    sprintf(mess," Echo %s -",tmp);
-    write_user(user,mess);
-    if(ustr[user].colors)
-      strcpy(mess,"On");
-    else
-      strcpy(mess,"Off");
-    sprintf(mess," Colors %s\n\r",tmp);
-    write_user(user,mess);
-    if(ustr[user].tf)
-     {
-	sprintf(mess,"=> Voce e' usuario do programa Tinyfuge \n\r");
-	write_user(user,mess);
-     }
-    if(ustr[user].have_db)
-     {
-	sprintf(mess,"=> Voce ja' possui um registro em nossa base de dados \n\r");
-	write_user(user,mess);
-     }
-    else
-     {
-	sprintf(mess,"=> Voce ainda nao possui um registro em nossa base de dados \n\r");
-	write_user(user,mess);
-     }
-   
-    sprintf(mess,"============================================================\n\r");
-    write_user(user,mess);
-}
 
- 
+
 /**************************** COMMAND FUNCTIONS *******************************/
 
 /*** Call command function or execute command directly ***/
@@ -1598,7 +1383,6 @@ if (ustr[user].level<com_level[com_num]) {
 	return;
 	}
 inpstr=remove_first(inpstr);  /* get rid of commmand word */
-
 
 switch(com_num) {
 	case 0 : user_quit(user); break;
@@ -1651,16 +1435,13 @@ switch(com_num) {
 		if (!more(user,ustr[user].sock,NEWSFILE)) 
 			write_user(user,"Nao ha novidades ... Avise ao Ironwood!");
 		break;
-	case 27: 
+	case 27:
 		if (ustr[user].prompt) {
-		        sprintf(mess,"=> [%s:SUCCESS]: Seu prompt agora esta Off",TALKERNAME);
-			write_user(user,mess);  
-			ustr[user].prompt=0;
-		        save_stats(user); break;
+			write_user(user,"Prompt OFF");  
+			ustr[user].prompt=0;  break;
 			}
-                sprintf(mess,"=> [%s:SUCCESS]: Seu prompt agora esta On",TALKERNAME);
-		write_user(user,mess);
-		ustr[user].prompt=1; save_stats(user); break;
+		write_user(user,"Prompt ON");
+		ustr[user].prompt=1;  break;
         case 28: move(user,inpstr);  break;
 	case 29:
 		if (sys_access) {
@@ -1682,7 +1463,7 @@ switch(com_num) {
 		write_syslog(mess,1);  break;
         case 31: semote(user,inpstr);  break;
         case 32: pemote(user,inpstr);  break;
-        case 33: set(user,inpstr);  break;
+        case 33: set_desc(user,inpstr);  break;
 	case 34: 
 		if (allow_new) {
 			write_user(user,"Novos usuarios? NAO!");  allow_new=0;
@@ -1711,15 +1492,8 @@ switch(com_num) {
         case 51: talkers(user); break;
         case 52: rules(user); break;
         case 53: sayto(user,inpstr); break;
-        case 54: status(user,inpstr); break;
-        case 55: set_desc(user,inpstr); break;
-        case 56: cbuff(user); break;
-        case 57: add_news(user,inpstr); break; 
-        case 58: systeminfo(user); break;
-        case 59: delete_news(user,inpstr); break;
-        case 60: delete_user(user,inpstr); break;
-        case 61: add_url(user,inpstr); break; 
-        default: sprintf(mess,"=> [%s]: O que ?",TALKERNAME); write_user(user,mess); break;
+	case 54: uptime(user); break;
+        default: write_user(user,"O que?"); break;
 	}
 }
 
@@ -1756,17 +1530,8 @@ close(ustr[user].sock);
 
 /* send message to other users & conv file  & reset some vars */
 if (ustr[user].name[0]!='?') {
-	if(strstr(ustr[user].outmsg,"NULL"))
-          { 
-	     sprintf(mess,"=> [ SAIU ]: %s %s\n\r",ustr[user].recap,ustr[user].desc);
-	     write_alluser(user,mess,1,0);
-	  }
-         else
-          {
-	     sprintf(mess,"=> [%s %s]: %s \n\r",ustr[user].recap,ustr[user].desc,ustr[user].outmsg);
-	     write_alluser(user,mess,1,0);
-	  }
-        
+	sprintf(mess,"=> [ SAIU ]: %s %s\n\r",ustr[user].name,ustr[user].desc);
+	write_alluser(user,mess,1,0);
         sprintf(mess,"%s saiu do %s \n\r",ustr[user].name,TALKERNAME);
 	write_syslog(mess,1);
 	}
@@ -1830,7 +1595,6 @@ write_user(user,mess);
 /*** shout sends speech to all users regardless of area ***/
 shout(user,inpstr)
 int user;
-
 char *inpstr;
 {
 if (!inpstr[0]) {
@@ -1851,51 +1615,18 @@ tell(user,inpstr)
 int user;
 char *inpstr;
 {
-char other_user[ARR_SIZE],name[ARR_SIZE], tmp_user[ARR_SIZE];
+char other_user[ARR_SIZE],name[ARR_SIZE];
 int user2,temp;
-DIR *dir;
-struct dirent *dp;
    
 sscanf(inpstr,"%s ",other_user);
 other_user[0]=toupper(other_user[0]);
 inpstr=remove_first(inpstr);
-
-sprintf(tmp_user,"%s.D",other_user);
-   
 if (!inpstr[0]) {  
 	write_user(user,"Utilizacao: .tell <animal> <mensagem>");  return;
 	}
-if ((user2=get_user_num(other_user))==-1) 
-     {
-	if((dir=opendir(USERDATADIR))==NULL)
-	  {
-	     sprintf(mess,"=> %s nao esta' no Mundo dos Pinguins!\n\r",other_user);
-	     write_user(user,mess);
-	     sprintf(mess,"=> [%s]: mande um smail para ele! :-)",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-	else
-	  {
-	     while(dp=readdir(dir))
-	       {
-		  if(!strcmp(dp->d_name,".") || !strcmp(dp->d_name,"..") || !strcmp(dp->d_name,".D")) continue;
-	     
-	           if(strstr(dp->d_name,tmp_user))
-		      {
-			 sprintf(mess,"=> %s nao esta no talker\n\r",other_user);
-		         write_user(user,mess);
-			 sprintf(mess,"=> [%s]: mande um smail para ele! :-)",TALKERNAME);
-			 write_user(user,mess);
-		         (void)closedir(dir);
-			 return;
-		      }
-               }
-	     (void)closedir(dir);
-	     sprintf(mess,"=> Nao ha nenhum usuario cadastrado com o nome %s",other_user);
-	     write_user(user,mess);
-	     return;
-	  }
+if ((user2=get_user_num(other_user))==-1) {
+	sprintf(mess,"%s nao esta' no Mundo dos Pinguins!",other_user);
+	write_user(user,mess);  return;
 	}
 if (user2==user) {
 	write_user(user,"Isto nao eh um hospicio, se quer falar consigo mesmo, esta no local errado ... procure a clinica de reabilitacao mais proxima e deixe de usar drogas!");
@@ -1960,10 +1691,8 @@ char *inpstr;
      {
 	if((dir=opendir(USERDATADIR))==NULL)
 	  {
-	     sprintf(mess,"=> %s nao esta no talker\n\r",other_user);
+	     sprintf(mess,"=> %s nao esta no talker",other_user);
 	     write_user(user,mess);  
-	     sprintf(mess,"=> [%s]: Mande um smail para ele! :-)",TALKERNAME);
-	     write_user(user,mess);
 	     sprintf(mess,"GAWNUTS : erro ao abrir diretorio para a funcao sayto %s\n",USERDATADIR);
 	     write_syslog(mess,1);
 	     return;
@@ -1975,9 +1704,7 @@ char *inpstr;
 		  if(!strcmp(dp->d_name,".") || !strcmp(dp->d_name,"..") || !strcmp(dp->d_name,".D")) continue;
 		  if(strstr(dp->d_name,tmp_user))
 		    { 
-		       sprintf(mess,"=> %s nao esta no talker\n\r",other_user);
-		       write_user(user,mess);
-		       sprintf(mess,"=> [%s]: Mande um smail para ele ! :-)",TALKERNAME);
+		       sprintf(mess,"=> %s nao esta no talker",other_user);
 		       write_user(user,mess);
 		       (void)closedir(dir);
 		       return;
@@ -2280,8 +2007,8 @@ char *inpstr;
 if (!inpstr[0]) {
 	write_user(user,"Uso: .emote <texto>");  return;
 	}
-if (!ustr[user].vis) sprintf(mess,"=> (Um animal %s)",inpstr);
-else sprintf(mess,"=> (%s %s)",ustr[user].name,inpstr);
+if (!ustr[user].vis) sprintf(mess,"Um animal %s",inpstr);
+else sprintf(mess,"%s %s",ustr[user].name,inpstr);
 
 /* write & record output */
 write_user(user,mess);
@@ -2297,22 +2024,11 @@ record(mess,ustr[user].area);
 cls(user)
 int user;
 {
-   int i;
    
-   if(!ustr[user].tf)
-     {
-       strcpy(mess,"\e[2J");
-       write_user(user,mess);
-     }
-   else
-     {
-	for(i=0;i<10;i++)
-	  {
-	     sprintf(mess,"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	     write_user(user,mess);
-	  }
-     }
+   strcpy(mess,"\e[2J");
    
+   write_user(user,mess);
+
 }
 
 
@@ -2346,7 +2062,7 @@ int user;
 char *inpstr;
 {
 FILE *fp;
-char filename[30],name[TNAME_LEN];
+char filename[30],name[NAME_LEN];
 
 if (!inpstr[0]) {
 	write_user(user,"Uso: .write <mensagem>"); return;
@@ -2412,19 +2128,13 @@ char *nocando="Nao consigo apagar tanta coisa...";
 FILE *bfp,*tfp;
 
 lines=atoi(inpstr);
-if (lines<1) 
-     {
-        sprintf(mess,"=> [%s:WARNING]: Uso : .wipe <numero de comentarios a apagar>",TALKERNAME);
-	write_user(user,mess);  
-	return;
-     }
+if (lines<1) {
+	write_user(user,"Uso: .wipe <numero de comentarios a apagar>");  return;
+	}
 sprintf(filename,"%s/board%d",MESSDIR,ustr[user].area);
-   if (!(bfp=fopen(filename,"r"))) 
-     {
-       sprintf(mess,"=> [%s:WARNING]: %s",TALKERNAME,nocando);	
-       write_user(user,mess);  
-       return;
-     }
+if (!(bfp=fopen(filename,"r"))) {
+	write_user(user,nocando);  return;
+	}
 sprintf(temp,"%s/temp",MESSDIR);
 if (!(tfp=fopen(temp,"w"))) {
 	write_user(user,"=> Oops ... desculpe mas o talker esta' com dificuldades em fazer isso...");
@@ -2437,8 +2147,7 @@ if (!(tfp=fopen(temp,"w"))) {
 while(cnt<lines) {
 	c=getc(bfp);
 	if (feof(bfp)) {
-	        sprintf(mess,"=> [%s:WARNING]: %s",TALKERNAME,nocando);
-		write_user(user,mess);
+		write_user(user,nocando);
 		fclose(bfp);  fclose(tfp);
 		return;
 		}
@@ -2461,11 +2170,10 @@ if (rename(temp,filename)==-1) {
 astr[ustr[user].area].mess_num-=lines;
 
 /* print messages */
-sprintf(mess,"=> [%s:SUCCESS]: Voce apagou algumas mensagens do quadro.",TALKERNAME);
-write_user(user,mess);
-sprintf(mess,"=> [%s]: %s apaga algumas mensagens da board.\n\r",TALKERNAME,ustr[user].name);
+write_user(user,"Ok");
+sprintf(mess,"=> %s apaga algumas mensagens da board.\n\r",ustr[user].name);
 if (!ustr[user].vis)
-	sprintf(mess,"=> [%s]: Uma mao fantasma apaga uma mensagem do quadro... SPOOKY!\n\r",TALKERNAME);
+	sprintf(mess,"Uma mao fantasma apaga uma mensagem do quadro... SPOOKY!\n\r");
 write_alluser(user,mess,0,0);
 }
 
@@ -2477,7 +2185,7 @@ int user;
 char *inpstr;
 {
 FILE *fp;
-char filename[30],name[TNAME_LEN];
+char filename[30],name[NAME_LEN];
 
 if (!inpstr[0]) {
 	write_user(user,"Uso: .bugtrack <bug a ser informado>"); return;
@@ -2506,7 +2214,7 @@ write_user(user,"=> Voce adiciona um bug a nossa bugtrack!");
 sprintf(mess,"=> %s adiciona um bug a nossa bug list .\n\r",ustr[user].name);
 
 if (!ustr[user].vis) 
-	sprintf(mess,"=> Visualiza um usuario nervoso a adicionar um bug a nossa bugtrack...\n\r");
+	sprintf(mess,"Visualiza um usuario nervoso a adicionar um bug a nossa bugtrack...\n\r");
 
 write_alluser(user,mess,0,0);
 
@@ -2599,7 +2307,7 @@ int user;
 char *inpstr;
 {
 FILE *fp;
-char filename[30],name[TNAME_LEN];
+char filename[30],name[NAME_LEN];
 
 if (!inpstr[0]) {
 	write_user(user,"Uso: .suggest <sugestao>"); return;
@@ -2713,195 +2421,7 @@ more(user,ustr[user].sock,filename);
 
 }
 
-/*** adding some news in the talker ***/
-add_news(user,inpstr)
-int user;
-char *inpstr;
-{
-FILE *fp, *fp2;
-char tmp_day2,tmp_day[3],system_time[15],system_data[15],the_query[200],c,filename2[30],filename[30],name[TNAME_LEN];
-MYSQL my_connection;
-int res,day;
-time_t tm_num;
-struct tm *ts;   
-
-time(&tm_num);
-ts=localtime(&tm_num);   
-strftime(system_data,12,"%Y-%m-%d",ts);
-strftime(system_time,12,"%H:%M:%S",ts);   
-strftime(tmp_day,2,"%w",ts);
-sprintf(mess,"%s",tmp_day);
-day=atol(tmp_day);
-
-if(strlen(inpstr) > 110) 
-     {
-	sprintf(mess,"=> [%s:ERROR]: Sua mensagem esta muito grande ... impossivel inseri-la no banco de dados !!!",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-
-if (!inpstr[0]) {
-	write_user(user,"Uso: .addnews <noticia>"); return;
-	}
-
-sprintf(the_query,"INSERT INTO gawnuts_news(news_date,news_user_name,message,news_time,news_day_of_the_week) VALUES('%s','%s','%s','%s','%s')",system_data,ustr[user].name,inpstr,system_time,day_of_the_week[day]);
-   
-sprintf(filename,"%s",NEWSFILE);
-sprintf(filename2,"%s.tmp",NEWSFILE);   
-
-if (!(fp=fopen(filename,"r+"))) {
-	sprintf(mess,"%s : news nao pode ser adicionado, IRONWOOD confira o codigo.",syserror);
-	write_user(user,mess);
-	sprintf(mess,"ERROR: Couldn't open %s message board file to write in write_board()\n",astr[ustr[user].area].name);
-	write_syslog(mess,0);
-	return;
-	}
-
-mysql_init(&my_connection);
-if(mysql_real_connect(&my_connection,MYSQL_HOST,MYSQL_USER,MYSQL_PASS,MYSQL_DB,0,NULL,0))
-     {   
-	sprintf(mess,"DB CONNECTION SUCCESS\n");
-	write_syslog(mess,1);
-	res = mysql_query(&my_connection,the_query);
-	if(!res)
-	  {
-	     sprintf(mess,"Insert %lu rows in the add_news_query\n",(unsigned long)mysql_affected_rows(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	else
-	  {
-	     sprintf(mess,"Insert error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	     mysql_close(&my_connection);
-	     sprintf(mess,"=> [%s:ERROR]: Impossivel executar a query no banco de dados .. nao eh possivel inserir noticias neste momento ... \n\r",TALKERNAME);
-	     write_user(user,mess);
-	     fclose(fp);
-	  }
-	
-	mysql_close(&my_connection);
-     }
-else
-     {   
-	sprintf(mess,"DB CONNECTION FAILED \n");
-	write_syslog(mess,1);
-	if(mysql_errno(&my_connection))
-	  {
-	     sprintf(mess,"Connection Error : %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	
-	sprintf(mess,"[%s:ERROR] : impossivel conectar a base de dados ... nao e' possivel adicionar news neste momento \n",TALKERNAME);
-	write_user(user,mess);
-	fclose(fp);
-	return;
-     }
-
-if(!(fp2=fopen(filename2,"w"))) { fclose(fp); return; }   
-strcpy(name,ustr[user].name);
-if (!ustr[user].vis)  strcpy(name,"Um pinguim");
-sprintf(mess,"(%s) De %s: %s\n",timeline(0),name,inpstr);
-fputs(mess,fp2);
-   
-do
-     {
-	c=getc(fp);
-	putc(c,fp2);
-     }while(!feof(fp));
-
-fclose(fp); 
-fclose(fp2);
-unlink(NEWSFILE);
-rename(filename2,NEWSFILE);
-   
-/* send output */
-write_user(user,"=> Voce adicionou uma noticia no talker!\n\r");
-sprintf(inpstr,"foi adicionada uma nova noticia, digite .news e divirta-se !!!!  :-)",ustr[user].name);
-write_board(user,inpstr); 
-}
-
-/*** function to delete news of the talker ***/
-delete_news(user,inpstr)
-int user;
-char *inpstr;
-{
-   int i,counter,counter1=0;
-   char filename[30], line[130];
-   FILE *fp, *fp2;
-   
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s:WARNING]: Uso : .dnews <numero de noticias a serem apagadas>",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-   i=atol(inpstr);
-   
-   if(!(fp=fopen(NEWSFILE,"r")))
-	{
-	   sprintf(mess,"Nao foi possivel abrir o arquivo de news para a funcao delete_news() le-lo!!!\n");
-	   write_syslog(mess,1);
-	   sprintf(mess,"=> [%s:ERROR]: Houve um problema ao abrir o arquivo de news para leitura ... ",TALKERNAME);
-	   write_user(user,mess);
-	   return;
-	}
-   
-   counter=-1;
-   
-   do
-     {
-	fgets(line,125,fp);
-	counter++;
-     }while(!feof(fp));
-  
-   
-   if(i>counter) 
-     {
-       sprintf(mess,"=> [%s:WARNING]: Impossivel deletar este numero de linhas .... ",TALKERNAME);
-       write_user(user,mess);
-       fclose(fp);
-       return;	
-     }
-   
-   sprintf(filename,"%s.tmp",NEWSFILE);
-	
-   if(!(fp2=fopen(filename,"w+")))
-     {
-	sprintf(mess,"Nao foi possivel abrir um arquivo temporario para escrita na funcao delete_news()\n");
-	write_syslog(mess,1);
-	sprintf(mess,"=> [%s:ERROR]: Houve um problema ao abrir um arquivo temporario para escrita na funcao delete_news()",TALKERNAME);
-	write_user(user,mess);
-	fclose(fp);
-	return;
-     }
-   
-   counter-=i;
-   
-   rewind(fp);
-   
-   while(!feof(fp))
-     {
-	counter1++;
-	fgets(line,125,fp);
-	if(counter1<=counter) fputs(line,fp2);
-     }
-   
-   
-   fclose(fp);
-   fclose(fp2);
-   
-   unlink(NEWSFILE);
-   rename(filename,NEWSFILE);
-   
-   sprintf(mess,"=> [%s:SUCCESS]: Voce acabou de deletar %d noticias do nosso talker !!! :-)",TALKERNAME,i);
-   write_user(user,mess);
-   sprintf(mess,"O usuario %s acaba de deletar %d noticias do nosso talker \n",ustr[user].name,i);
-   write_syslog(mess,1);
-
-}
-
-
-/*** view the talkers file ***/ 
+// view the talkers file 
 talkers (user)
 int user;
 {
@@ -3057,7 +2577,7 @@ shutdown_talker(user,ls)
 int user,ls;
 {
 int u;
-char name[TNAME_LEN];
+char name[NAME_LEN];
 
 if (shutd==-1) {
 	write_user(user,"\n\rTem certeza disso? (y/n)? ");
@@ -3133,42 +2653,12 @@ int area=ustr[user].area;
 int pos=astr[area].conv_line%NUM_LINES;
 int f;
 
-sprintf(mess,"\n\r========== Buffer de Conversa da sala ============\n\n\r");
-write_user(user,mess);
-   
 for (f=0;f<NUM_LINES;++f) {
 	write_user(user,conv[area][pos++]);  pos=pos%NUM_LINES;
 	}
-
-sprintf(mess,"\n\r========== Matou sua curiosidade ? ===============\n\r");
-write_user(user,mess);
-   
 }
 
-/*** clear the last five lines of conversation in area ***/
-cbuff(user)
-int user;
-{
-   int pos=astr[ustr[user].area].conv_line%NUM_LINES;
-   int f;
-   
-   sprintf(mess,"=> [%s:ANNOUNCE]: Querendo manter segredo sobre o que voce falou nao eh ? :-)",TALKERNAME);
-   
-   write_user(user,mess);
-   
-   for(f=0;f<NUM_LINES;++f)
-     {
-	strcpy(conv[ustr[user].area][pos++],"       ");
-	pos=pos%NUM_LINES;
-     }
-   
-   sprintf(mess,"\n\r=> [%s:SUCCESS]: Voce acaba de deletar o buffer desta sala ... \n\r",TALKERNAME);
-   
-   write_user(user,mess);
-   
-}
 
-	
 
 /*** help function ***/
 help(user,inpstr)
@@ -3306,374 +2796,27 @@ sys_access=1;
 }
 
 
+
+
+
 /*** Set user description ***/
 set_desc(user,inpstr)
 int user;
 char *inpstr;
 {
 if (!inpstr[0]) {
-        sprintf(mess,"=> [%s]: A sua descricao e': %s",TALKERNAME,ustr[user].desc);
+	sprintf(mess,"A sua descricao e': %s",ustr[user].desc);
 	write_user(user,mess);  return;
 	}
 if (strlen(inpstr)>=DESC_LEN) {
-	sprintf(mess,"=> [%s:Oops]: Descricao muito grande !",TALKERNAME);
-        write_user(user,mess);  return;
+	write_user(user,"Essa descricao e muito grande!");  return;
 	}
 strcpy(ustr[user].desc,inpstr);
 save_stats(user); 
-sprintf(mess,"=> [%s:SUCCESS]: %s, sua descricao foi alterada para < %s >",TALKERNAME,ustr[user].name,ustr[user].desc);   
-write_user(user,mess);
-}
-
-/*** Set user email ***/
-
-set_email(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: O seu email atualmente cadastrado e': %s",TALKERNAME,ustr[user].email);
-	write_user(user,mess);
-	return;
-     }
-    if(strlen(inpstr)>EMAIL_LEN)
-     {
-	sprintf(mess,"=> [%s:Oops]: Descricao muito grande !",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-    strcpy(ustr[user].email,inpstr);
-    save_stats(user);
-    sprintf(mess,"=> [%s:SUCCESS]: %s, seu email agora esta listado como < %s >",TALKERNAME,ustr[user].name,ustr[user].email);
-    write_user(user,mess);
- }
-
-/*** set bday of the user ***/
-set_bday(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Seu aniversario atualmente cadastrado e': %s",TALKERNAME,ustr[user].bday);
-	write_user(user,mess);
-	return;
-     }
-   
-   sscanf(inpstr,"%s",ustr[user].bday);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Voce mudou sua data de nascimento para %s\n\r",TALKERNAME,ustr[user].bday);
-   write_user(user,mess);
-   
-   if(test_bday(user))
-     {
-	sprintf(mess,"=> [%s:GREATINGS]: Parabens pelo seu aniversario:-) ",TALKERNAME);
-	write_user(user,mess);
-	sprintf(mess,"=> [%s:ANNOUNCE]: Hoje eh aniversario do usuario %s. Deem os parabens ele !!!",TALKERNAME,ustr[user].name);
-	write_alluser(user,mess,1,0);
-     }
-
-}
-
-/*** set gender of the user ***/
-set_gender(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Voce esta cadastrado como < Sexo( genero ) : %s > ",TALKERNAME,ustr[user].gender);
-	write_user(user,mess);
-	return;
-     }
-   inpstr[0]=toupper(inpstr[0]);
-   
-   if(strstr(inpstr,"Male") || strstr(inpstr,"Female"))
-      {
-	 strcpy(ustr[user].gender,inpstr);
-         save_stats(user);
-	 if(strstr(inpstr,"Male"))
-	    {
-	       sprintf(mess,"=> [%s:SUCCESS]: Voce agora esta cadastrado como < Sexo ( genero ) : %s > ",TALKERNAME,"masculino");
-               write_user(user,mess);
-	    }
-	  else
-	    {  
-	       sprintf(mess,"=> [%s:SUCCESS]: Voce agora esta cadastrado como < Sexo ( genero ) : %s >",TALKERNAME,"feminino");
-	       write_user(user,mess);
-	    }
-	    
-      }
-   else
-      {
-	 sprintf(mess,"=> [%s:Oops]: As opcoes sao male/female/others",TALKERNAME);
-	 write_user(user,mess);
-	 return;
-      }
-      
-}
-
-/*** set user web page ***/
-set_www(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Sua home page e' < %s > ",TALKERNAME,ustr[user].www);
-	write_user(user,mess);
-	return;
-     }
-   
-   if(strlen(inpstr)>WWW_LEN)
-     {
-	sprintf(mess,"=> [%s:Oops]: WWW muito grande ... avise ao IronWood !",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-   strcpy(ustr[user].www,inpstr);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Sua pagina www agora neste talker e' %s ",TALKERNAME,ustr[user].www);
-   write_user(user,mess);
+write_user(user,"=> Foi feito  ;)");
 }
 
 
-/*** set the message of the login ***/
-set_loginmsg(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Sua mensagem de login e' < %s > ",TALKERNAME,ustr[user].loginmsg);
-	write_user(user,mess);
-	return;
-     }
-   
-   if(strlen(inpstr)>DESC_LEN)
-     {
-	sprintf(mess,"=> [%s:Oops]: Sua mensagem de login esta' muito grande !!! ",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-   strcpy(ustr[user].loginmsg,inpstr);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Sua mensagem de login e' < %s > ",TALKERNAME,ustr[user].loginmsg);
-   write_user(user,mess);
-}
-
-/*** set the out message, the message shows when the user leaves the talker ***/
-set_outmsg(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s] : Sua mensagem de saida e' < %s > ",TALKERNAME,ustr[user].outmsg);
-	write_user(user,mess);
-	return;
-     }
-   
-   if(strlen(inpstr)>DESC_LEN)
-     {
-	sprintf(mess,"=> [%s:Oops]: Sua mensagem de saida esta muito grande !!! ",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-   strcpy(ustr[user].outmsg,inpstr);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Sua mensagem de saida do talker e' < %s > ",TALKERNAME,ustr[user].outmsg);
-   write_user(user,mess);
-   
-}
-
-/*** set icq ***/
-set_icq(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Seu unin cadastrado e' < %d > ",TALKERNAME,ustr[user].icq);
-	write_user(user,mess);
-	return;
-     }
-   strcpy(ustr[user].icq,inpstr);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Seu numero de icq agora e' < %s > ",TALKERNAME,ustr[user].icq);
-   write_user(user,mess);
-}
-
-/*** set the tf option ***/
-set_tf(user,inpstr)
-int user;
-char *inpstr;
-{
-   char option[10];
-   
-   if(!inpstr[0])
-     {
-	if(ustr[user].tf)
-	  {
-	     sprintf(mess,"=> [%s]: Atualmente voce esta cadastrado como usuario do programa tinyfuge.",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-	else
-	  {
-	     sprintf(mess,"=> [%s]: Voce esta cadastrado como nao usuario do programa tinyfuge",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-     }
-   
-   inpstr[0]=toupper(inpstr[0]);
-   
-   if(strstr(inpstr,"On"))
-     {
-       sprintf(mess,"=> [%s:SUCCESS]: Agora voce esta cadastrado como usuario do programa tinyfuge",TALKERNAME);
-       write_user(user,mess);
-       ustr[user].tf=1;
-     }
-   else
-     {
-	sprintf(mess,"=> [%s:SUCCESS]: Agora voce esta cadastrado como nao usuario do programa tinyfuge",TALKERNAME);
-	write_user(user,mess);
-	ustr[user].tf=0;
-     }
- 
-save_stats(user);
-   
-}
-
-/*** set the prompt option ***/
-set_prompt(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	if(ustr[user].prompt)
-	  {
-	     sprintf(mess,"=> [%s]: Seu prompt esta cadastrado como On ",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-	else
-	  {
-	     sprintf(mess,"=> [%s]: Seu prompt esta cadastrado como Off",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-     }
-   
-   inpstr[0]=toupper(inpstr[0]);
-   
-   if(strstr(inpstr,"On"))
-     {
-	ustr[user].prompt=1;
-	save_stats(user);
-	sprintf(mess,"=> [%s:SUCCESS]: Seu prompt agora esta On",TALKERNAME);
-	write_user(user,mess);
-     }
-   else
-     {
-	ustr[user].prompt=0;
-	save_stats(user);
-	sprintf(mess,"=> [%s:SUCCESS]: Seu prompt agora esta Off",TALKERNAME);
-	write_user(user,mess);
-     }
-}
-
-/*** the set echo function ***/
-set_echo(user,inpstr)
-int user;
-char *inpstr;
-{
-   if(!inpstr[0])
-     {
-	if(ustr[user].echo)
-	  {
-	     sprintf(mess,"=> [%s]: Sua funcao de echo esta On ",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-	else
-	  {
-	     sprintf(mess,"=> [%s]: Sua funcao de echo esta Off ",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-     }
-   
-   inpstr[0]=toupper(inpstr[0]);
-   
-   if(strstr(inpstr,"On"))
-     {
-	ustr[user].echo=1;
-	save_stats(user);
-	sprintf(mess,"=> [%s:SUCCESS]: Sua funcao echo agora esta On",TALKERNAME);
-	write_user(user,mess);
-     }
-   else
-     {
-	ustr[user].echo=0;
-	save_stats(user);
-	sprintf(mess,"=> [%s:SUCCESS]: Sua funcao de echo agora esta em Off",TALKERNAME);
-	write_user(user,mess);
-     }
-}
-
-/*** the set recap function ***/
-set_recap(user,inpstr)
-int user;
-char *inpstr;
-{
-   char tmp_recap[DESC_LEN*4], tmp_name[DESC_LEN*4];
-   int i;
-   
-   if(!inpstr[0])
-     {
-	sprintf(mess,"=> [%s]: Seu atual nome em recap e' < %s > ",TALKERNAME,ustr[user].recap);
-	write_user(user,mess);
-	return;
-     }
-   if(strlen(inpstr)>RECAP_NAME_LEN)
-     {
-	sprintf(mess,"=> [%s:Oops]: Seu nome de recap esta muito grande .... Calma :-) ",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-   
-     
-   for(i=0; inpstr[i] != '\0';i++)
-       tmp_recap[i]=tolower(inpstr[i]);
-   tmp_recap[i]='\0';
-   
-   tmp_recap[0]=toupper(tmp_recap[0]);
-   
-   if(!strstr(ustr[user].name,tmp_recap))
-     {
-	strcpy(tmp_name,ustr[user].name);
-	i = strlen(ustr[user].name);
-	tmp_name[i-1]=toupper(tmp_name[i-1]);
-	sprintf(mess,"=> [%s:Oops]: O seu nome de recap tem que ser a mesma palavra que o nome de login\n\r",TALKERNAME);
-	write_user(user,mess);
-	sprintf(mess,"=> Exemplo :  %s - %s ",ustr[user].name,tmp_name);
-	write_user(user,mess);
-	return;
-     }
-   
-   strcpy(ustr[user].recap,inpstr);
-   save_stats(user);
-   sprintf(mess,"=> [%s:SUCCESS]: Seu nome nome de recap e' < %s >",TALKERNAME,ustr[user].recap);
-   write_user(user,mess);
-
-}
 
 /*** Enter profile ***/
 enter_pro(user,inpstr)
@@ -3773,13 +2916,7 @@ char *inpstr;
 int u;
 char filename[80],user2[20],line[81];
 FILE *fp;
-char *levstr[]={ "EMBRIAO","OVO","PINGUIM","TUX" };
-char tmp_asc[DESC_LEN]= { "( Nao configurado )" };
-char level_str[5],timestr[30],sitestr[80],desc[80],email[EMAIL_LEN],www[WWW_LEN];
-char bday[DESC_LEN],gender[DESC_LEN],loginmsg[DESC_LEN],outmsg[DESC_LEN],icq[DESC_LEN],recap[DESC_LEN*4];
-char age[10],char_prompt[4],echo[4],colors[4],tf[4];
-int int_level,int_age,int_prompt,int_echo,int_colors,int_tf;
-   
+
 if (!inpstr[0]) {
 	write_user(user,"Uso: .examine <user>");  return;
 	}
@@ -3792,129 +2929,20 @@ if ((u=get_user_num(user2))!=-1 && u!=user) {
 	sprintf(mess,"=> %s esta lhe examinando...\n\r",ustr[user].name);
 	write_user(u,mess);
 	}
-if(u==-1)
-     {	
-       sprintf(filename,"%s/%s.D",USERDATADIR,user2);
-       if(!(fp=fopen(filename,"r"))) return;
-       fgets(timestr,30,fp);
-       fgets(sitestr,80,fp);
-       fgets(desc,80,fp);
-       fgets(level_str,4,fp);
-       fgets(email,EMAIL_LEN-1,fp);
-       fgets(www,WWW_LEN-1,fp);
-       fgets(bday,39,fp);
-       fgets(gender,9,fp);
-       fgets(loginmsg,DESC_LEN-1,fp);
-       fgets(outmsg,DESC_LEN-1,fp);
-       fgets(icq,DESC_LEN-1,fp);
-       fgets(recap,(DESC_LEN*4)-1,fp);
-       fgets(age,9,fp);
-       fgets(char_prompt,3,fp);
-       fgets(echo,3,fp);
-       fgets(colors,3,fp);
-       fgets(tf,3,fp);
-       fclose(fp);
-        
-       int_age=atol(age);
-       int_prompt=atol(char_prompt);
-       int_echo=atol(echo);
-       int_colors=atol(colors);
-       int_level=atol(level_str);
-       int_tf=atol(tf);
-   
-        /* remove newlines */
-	timestr[strlen(timestr)-1]=0; 
-        desc[strlen(desc)-1]=0;
-        email[strlen(email)-1]=0;
-        www[strlen(www)-1]=0;
-        gender[strlen(gender)-1]=0;
-        loginmsg[strlen(loginmsg)-1]=0;
-        outmsg[strlen(outmsg)-1]=0;
-        icq[strlen(icq)-1]=0;
-        recap[strlen(recap)-1]=0;
-	bday[strlen(bday)-1]=0;
-     }
-   else
-     {
-	strcpy(recap,ustr[u].recap);
-	int_level=ustr[u].level;
-	strcpy(gender,ustr[u].gender);
-	strcpy(bday,ustr[u].bday);
-	strcpy(www,ustr[u].www);
-	strcpy(email,ustr[u].email);
-	strcpy(icq,ustr[u].icq);
-     }
-   
-   
-if(strstr(recap,"NULL"))
-     strcpy(recap,user2);
-
-sprintf(mess,"\n\r======================================================\n\r");
-write_user(user,mess);
-
-sprintf(mess,"=> Profile do pinguim %s \n\r",recap);
-write_user(user,mess);   
-
-sprintf(mess,"======================================================\n\r");
-write_user(user,mess);   
-
-sprintf(mess,"=> Nivel : %s \n\r",levstr[int_level]);
-write_user(user,mess);   
-
-sprintf(filename,"%s/%s.D",USERDATADIR,user2);   
-
-if (get_user_num(user2)!=-1) 
-     {
-	sprintf(mess,"=> %s esta ligado no %s!!\n\r",user2,TALKERNAME);
-	write_user(user,mess); 
-     }
-else
-     { 
-	if (!(fp=fopen(filename,"r"))) return;
-        fgets(line,80,fp);
-        sprintf(mess,"=> %s ligou-se pela ultima vez em %s",user2,line);
-        write_user(user,mess);
-        fclose(fp);
-     }
-
-if(strstr(gender,"Male"))
-   strcpy(tmp_asc,"masculino");
-if(strstr(gender,"Female"))
-   strcpy(tmp_asc,"feminino");
-
-
-sprintf(mess,"=> E'um pinguim do sexo %s\n\r",tmp_asc);
-write_user(user,mess);   
-
-sprintf(mess,"=> Este pinguim nasceu no dia %s\n\r",bday);
-write_user(user,mess);
-
-sprintf(mess,"=> O email deste pinguim eh %s\n\r",email);
-write_user(user,mess);
-   
-sprintf(mess,"=> Sua pagina www e' : %s \n\r",www);
-write_user(user,mess);
-
-sprintf(mess,"=> O unin ( numero ) icq deste usuario e': %s \n\r",icq);
-write_user(user,mess);
-
-sprintf(mess,"======================================================\n\r");
-write_user(user,mess);
-   
 sprintf(filename,"%s/%s.P",USERDATADIR,user2);
-if (!more(user,ustr[user].sock,filename))  write_user(user,"Sem profile.\n\r");
-
-sprintf(mess,"======================================================\n\r");
+sprintf(mess,"\n\r** Profile do %s **\n\n\r",user2);
 write_user(user,mess);
-
-if(u==user)
-     {
-	sprintf(mess,"=> Opcoes do .set : status < usuario >\n\r");
-        write_user(user,mess);
-        sprintf(mess,"======================================================\n\r");
-        write_user(user,mess);
-     }
-   
+if (!more(user,ustr[user].sock,filename))  write_user(user,"Sem profile.\n\r");
+sprintf(filename,"%s/%s.D",USERDATADIR,user2);
+if (get_user_num(user2)!=-1) {
+	sprintf(mess,"\n\r%s esta ligado no %s!!\n\r",user2,TALKERNAME);
+	write_user(user,mess);  return;
+	}
+if (!(fp=fopen(filename,"r"))) return;
+fgets(line,80,fp);
+sprintf(mess,"\n\r%s ligou-se pela ultima vez em %s\r",user2,line);
+write_user(user,mess);
+fclose(fp);
 }
 
 
@@ -3995,6 +3023,9 @@ int user;
 FILE *fp;
 char filename[80];
 
+// changing the mails and reading mails to database 
+// this is made because the users are able to read the emails on a web interface 
+
 sprintf(filename,"%s/%s.M",MAILDIR,ustr[user].name);
 if (!(fp=fopen(filename,"r"))) {
 	write_user(user,"Voce nao tem mail nenhum!");
@@ -4012,7 +3043,7 @@ smail(user,inpstr)
 int user;
 char *inpstr;
 {
-char filename[80],name[TNAME_LEN],name2[TNAME_LEN];
+char filename[80],name[NAME_LEN],name2[NAME_LEN];
 int user2;
 FILE *fp;
 
@@ -4054,58 +3085,7 @@ write_maillog(mess,1);
 if ((user2=get_user_num(name))!=-1) write_user(user2,"VOCE TEM MAIL NOVO!!!\n\r");
 }
 
-/*** generic sendmail function ***/
-/*sendmail(user,user2,inpstr)
-int user;
-char *user2;
-char *inpstr;
-{
-smail(user,inpstr)
-int user;
-char *inpstr;
-{
-char filename[80],name[TNAME_LEN],name2[TNAME_LEN];
-int user2;
-FILE *fp;
 
-sscanf(inpstr,"%s ",name);
-name[0]=toupper(name[0]);
-inpstr=remove_first(inpstr);
-if (!inpstr[0]) {
-	write_user(user,"Uso: .smail <user> <mensagem>");  return;
-	}
-if (!strcmp(name,ustr[user].name)) {
-	write_user(user,"=> Para que mandar emails para voce mesmo ?");
-	return;
-	}
-
-/* see if user exists at all .. */
-/*if (!user_exists(user,name)) {
-	write_user(user,"=> Esse animal nao existe");  return;
-	}
-sprintf(filename,"%s/%s.M",MAILDIR,name);
-if (!(fp=fopen(filename,"a"))) {
-	sprintf(mess,"=> %s : Nao consigo abrir a sua caixa de correio... :(",syserror);
-	write_user(user,mess);
-	sprintf(mess,"ERROR: Couldn't open %s's mailbox file to append in smail()\n",name);
-	write_syslog(mess,0);
-	return;
-	}
-
-/* send the mail & record mailing */
-/*if (!ustr[user].vis) strcpy(name2,"alguem");
-else strcpy(name2,ustr[user].name);
-sprintf(mess,"(%s) De %s: %s\n",timeline(0),name2,inpstr);
-fputs(mess,fp);
-fclose(fp);
-write_user(user,"Mail enviado");
-sprintf(mess,"%s mailed %s\n",ustr[user].name,name);
-write_maillog(mess,1);
-
-/* if recipient is logged on at the moment notify them */
-/*if ((user2=get_user_num(name))!=-1) write_user(user2,"VOCE TEM MAIL NOVO!!!\n\r");
-}
-*/
 
 /*** Send wakeup message to a user ***/
 wake(user,inpstr)
@@ -4113,7 +3093,7 @@ int user;
 char *inpstr;
 {
 int user2;
-char name[TNAME_LEN];
+char name[NAME_LEN];
 
 if (!inpstr[0]) {
 	write_user(user,"Uso: .wake <user>");  return;
@@ -4140,7 +3120,7 @@ int user;
 char *inpstr;
 {
 int user2;
-char name[TNAME_LEN];
+char name[NAME_LEN];
 char *levstr[]={ "","FOCA","URSO","TUX" };
 
 if (!inpstr[0]) {
@@ -4173,7 +3153,7 @@ int user;
 char *inpstr;
 {
 int user2;
-char name[TNAME_LEN];
+char name[NAME_LEN];
 
 if (!inpstr[0]) {
 	write_user(user,"Uso: .demote <user>");  return;
@@ -4204,7 +3184,7 @@ change_pass(user,inpstr)
 int user;
 char *inpstr;
 {
-char line[81],name[TNAME_LEN],passwd[TNAME_LEN],word[2][ARR_SIZE];
+char line[81],name[NAME_LEN],passwd[NAME_LEN],word[2][ARR_SIZE];
 int found;
 FILE *fpi,*fpo;
 
@@ -4214,7 +3194,7 @@ if (!word[0][0] || !word[1][0]) {
 	write_user(user,"Uso: passwd <password antiga> <nova password>");
 	return;
 	}
-if (strlen(word[1])>TNAME_LEN-1) {
+if (strlen(word[1])>NAME_LEN-1) {
 	write_user(user,"Essa password eh grande demais...");  return;
 	}
 if (strlen(word[1])<4) {
@@ -4460,400 +3440,22 @@ for (user=0;user<MAX_USERS;++user) {
 	}
 }      
 
-/*** set user options ***/
-set(user,inpstr)
+
+/*** Uptime command ***/
+uptime(user)
 int user;
-char *inpstr;
-{
-   char command[ARR_SIZE], filename[30], other_user[ARR_SIZE], type[10], tmp_user[ARR_SIZE];
-   int user2;
 
-   sscanf(inpstr,"%s ",command);
-   command[0]=toupper(command[0]);
-   inpstr=remove_first(inpstr);
-    
-   if (!inpstr[0]) 
-     {
-	if(strstr(command,"Gender"))
-	   {
-	      set_gender(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Desc"))
-	   {
-	      set_desc(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Email"))
-	   {   
-	      set_email(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Bday"))
-	   {
-	      set_bday(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Www"))
-	   {
-	      set_www(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Loginmsg"))
-	   {
-	      set_loginmsg(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Outmsg"))
-	   {
-	      set_outmsg(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Icq"))
-	   {
-	      set_icq(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Tf"))
-	   {   
-	      set_tf(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Prompt"))
-	   {   
-	      set_prompt(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Echo"))
-	   {   
-	      set_echo(user,inpstr);
-	      return;
-	   }
-	if(strstr(command,"Recap"))
-	   {   
-	      set_recap(user,inpstr);
-	      return;
-	   }
-	   
-	sprintf(filename,"%s",SETFILE);
-	more(user,ustr[user].sock,filename);
-	return;
-     }
-	   
-  if(strstr(command,"Desc"))
-     {
-	set_desc(user,inpstr);
-	return;
-     }
-  if(strstr(command,"Email"))   
-     {
-	set_email(user,inpstr);
-	return;
-     }
-  if(strstr(command,"Bday")) 
-     {
-	set_bday(user,inpstr);
-	return;
-     }
-  if(strstr(command,"Www"))
-     {
-	set_www(user,inpstr);
-	return;
-     }
-   if(strstr(command,"Loginmsg"))
-      {
-	 set_loginmsg(user,inpstr);
-	 return;
-      }
-    if(strstr(command,"Outmsg"))
-       {
-	  set_outmsg(user,inpstr);
-	  return;
-       }
-    if(strstr(command,"Icq"))
-       {
-	  set_icq(user,inpstr);
-	  return;
-       }
-    if(strstr(command,"Tf"))
-       {   
-	  set_tf(user,inpstr);
-	  return;
-       }
-    if(strstr(command,"Prompt"))
-       {   
-	  set_prompt(user,inpstr);
-	  return;
-       }
-    if(strstr(command,"Echo"))
-       {   
-	  set_echo(user,inpstr);
-	  return;
-       }
-    if(strstr(command,"Recap"))
-     { 
-	set_recap(user,inpstr);
-	return;
-     }
-   if(strstr(command,"Gender"))
-      {
-	 set_gender(user,inpstr);
-	 return;
-      }
-      
-   sprintf(filename,"%s",SETFILE);
-    more(user,ustr[user].sock,filename);
-    return;
-     
- }
+/* Conversion constants. */
+ const long minute = 60;
+ const long hour = minute * 60;
+ const long day = hour * 24;
+ const double megabyte = 1024 * 1024;
+ /* Obtain system statistics. */
+ struct sysinfo si;
+ sysinfo (&si);
 
-  
-/** shows the information about the linux system ***/
+ sprintf ("system uptime : %ld days, %ld:%02ld:%02ld\n",  si.uptime / day, (si.uptime % day) / hour, (si.uptime % hour) / minute, si.uptime % minute);
 
-systeminfo(user)
-int user;
-{
-   /* sysinfo.c by detour@metalshell.com
- *
- * Display the uptime, load averages, total ram, free ram,
- * shared ram, buffered ram, total swap, free swap, and
- * number of processes running on a linux machine.
- *
- * http://www.metalshell.com/
- *
- */
-
-  int days, hours, mins;
-  struct sysinfo sys_info;
-
-  if(sysinfo(&sys_info) != 0)
-    perror("sysinfo");
-
-  // Uptime
-
-  days = sys_info.uptime / 86400;
-  hours = (sys_info.uptime / 3600) - (days * 24);
-  mins = (sys_info.uptime / 60) - (days * 1440) - (hours * 60);
-  sprintf(mess,"Information about the system running %s\n\r",TALKERNAME);
-  write_user(user,mess);
-  sprintf(mess,"Uptime : %d dias, %d horas, %d minutos \n\r",days,hours,mins);
-  write_user(user,mess);
-  sprintf(mess,"Load Avgs: 1min(%ld) 5min(%ld) 15min(%ld)\n", sys_info.loads[0], sys_info.loads[1], sys_info.loads[2]);
-  write_user(user,mess);
-  sprintf(mess,"Total de Ram: %ldk\tFree: %ldk\n", sys_info.totalram / 1024, sys_info.freeram / 1024);
-  write_user(user,mess);  
-  sprintf(mess,"Shared Ram: %ldk\n", sys_info.sharedram / 1024);
-  write_user(user,mess);
-  sprintf(mess,"Buffered Ram: %ldk\n", sys_info.bufferram / 1024);
-  write_user(user,mess);  
-  sprintf(mess,"Total Swap: %ldk\tFree: %ldk\n", sys_info.totalswap / 1024, sys_info.freeswap / 1024);
-  write_user(user,mess);
-  sprintf(mess,"Number of processes: %d\n\r", sys_info.procs);
-  write_user(user,mess);	
-}
-
-/*** to test the bday of the user ***/
-test_bday(user)
-int user;
-{
-   char tmp_bday[15], tmp_bday2[15];
-   int i;
-   time_t tm_num;
-   struct tm *ts;
-   
-   time(&tm_num);
-   ts=localtime(&tm_num);
-   strftime(tmp_bday,14,"%d/%m",ts);
-   for(i=0;i<5;i++) tmp_bday2[i]=ustr[user].bday[i];
-   tmp_bday2[5]='\0';
-   
-   if(strstr(tmp_bday,tmp_bday2)) return 1;
-   
-   return 0;   
-}
-
-/*** function to delete users of the talker ***/
-delete_user(user,inpstr)
-int user;
-char *inpstr;
-{
-   char line[100],filename[30],the_query[50], other_user[ARR_SIZE], name[TNAME_LEN];
-   MYSQL my_connection;
-   FILE *fp, *fp2;
-   int res;
-   
-   if (!inpstr[0]) 
-     {
-	sprintf(mess,"=> [%s:WARNING]: Uso : .duser <usuario>",TALKERNAME);
-	write_user(user,mess);  return; 
-     }
-   
-   sscanf(inpstr,"%s",other_user);
-   other_user[0]=toupper(other_user[0]);
-      
-   if(!(user_exists(user,other_user)))
-     {
-	sprintf(mess,"=> [%s:ERROR]: O usuario %s nao existe em nosso sistema !!! \n\r",TALKERNAME,other_user);
-	write_user(user,mess);
-	return;
-     }
-   
-   
-   sprintf(the_query,"DELETE FROM gawnuts_users WHERE name='%s'",other_user);
-   mysql_init(&my_connection);
-   
-   if(mysql_real_connect(&my_connection,MYSQL_HOST,MYSQL_USER,MYSQL_PASS,MYSQL_DB,0,NULL,0))
-     {
-	sprintf(mess,"DB CONNECTION SUCCESS\n");
-	write_syslog(mess,1);
-	
-	res=mysql_query(&my_connection,the_query);
-	
-	if(!res)
-	  {
-	     sprintf(mess,"Deleted %lu rows in the function delete_user()\n",(unsigned long)mysql_affected_rows(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	else
-	  {
-	     sprintf(mess,"Delete error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	
-	mysql_close(&my_connection);
-     }
-   else
-     {
-	sprintf(mess,"CONNECTION FAILED \n");
-	write_syslog(mess,1);
-	if(mysql_errno(&my_connection))
-	  {
-	     sprintf(mess,"Connection Error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	     sprintf(mess,"=> [%s:ERROR]: Impossivel conectar a base de dados. Favor tentar deletar este usuario mais tarde ... \n\r",TALKERNAME);
-	     write_user(user,mess);
-	     return;
-	  }
-     }
-   sprintf(filename,"%s.tmp",PASSFILE);
-   if (!(fp=fopen(PASSFILE,"r"))) {
-	sprintf(mess,"%s : Nao consigo abrir o seu arquivo de password...",syserror);
-	write_user(user,mess);
-	write_syslog("ERROR: Couldn't open password file to read in delete_user()\n",0);
-	return 0;
-	}
-   if(!(fp2=fopen(filename,"w+")))
-     {
-	sprintf(mess,"%s : nao consigo abrir arquivo temporario para escrita ... \n",syserror);
-	write_user(user,mess);
-	write_syslog("ERROR : Couldn't open temporary password file to write in delete_user()",0);
-	return;
-     }
-   
-   while(!feof(fp)) {
-	fgets(line,80,fp);
-	sscanf(line,"%s ",name);
-	if (strcmp(other_user,name)) fputs(line,fp2); 
-	} 
-   
-  fclose(fp);
-  fclose(fp2);
-  unlink(PASSFILE);
-  rename(filename,PASSFILE); 
-  sprintf(filename,"%s/%s.D",USERDATADIR,other_user);
-  if(fp=fopen(filename,"r"))
-     {  
-	fclose(fp);
-	unlink(filename);
-     }
-  sprintf(filename,"%s/%s.P",USERDATADIR,other_user);
-  if(fp=fopen(filename,"r"))
-     {
-	fclose(fp);
-	unlink(filename);
-     }
-  sprintf(filename,"%s/%s.M",MAILDIR,other_user);
-  if(fp=fopen(filename,"r"))
-     { 
-	fclose(fp);
-	unlink(filename);
-     }
-
-   sprintf(mess,"=> [%s:SUCCESS]: O usuario %s foi deletado de nosso sistema !!! \n\r",TALKERNAME,other_user);
-   write_user(user,mess);
-   sprintf(mess,"=> [%s:ANNOUNCE]: O usuario %s foi deletado de nosso sistema !!! \n\r",TALKERNAME,other_user);
-   write_alluser(user,mess,1,0);
-   sprintf(mess,"SUCCESS : %s is deleted by the user %s \n",other_user,ustr[user].name);
-   write_syslog(mess,1);
 
 }
 
-
-/*** add_url function ***/
-
-add_url(user,inpstr)
-int user;
-char *inpstr;
-{
-
-MYSQL my_connection;
-char the_query[100];
-int res;
-   
-if(strlen(inpstr) > 51) 
-     {
-	sprintf(mess,"=> [%s:ERROR]: Sua url esta muito grande ... impossivel inseri-la no banco de dados !!!",TALKERNAME);
-	write_user(user,mess);
-	return;
-     }
-
-if (!inpstr[0]) {
-	write_user(user,"Uso: .url <endereco>"); return;
-	}
-
-sprintf(the_query,"INSERT INTO gawnuts_urls(name,url) VALUES('%s','%s')",ustr[user].recap,inpstr);
-   
-   
-mysql_init(&my_connection);
-
-if(mysql_real_connect(&my_connection,MYSQL_HOST,MYSQL_USER,MYSQL_PASS,MYSQL_DB,0,NULL,0))
-     {   
-	sprintf(mess,"DB CONNECTION SUCCESS\n");
-	write_syslog(mess,1);
-	res = mysql_query(&my_connection,the_query);
-	if(!res)
-	  {
-	     sprintf(mess,"Insert %lu rows in the add_url_query\n",(unsigned long)mysql_affected_rows(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	else
-	  {
-	     sprintf(mess,"Insert error %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	     mysql_close(&my_connection);
-	     sprintf(mess,"=> [%s:ERROR]: Impossivel executar a query no banco de dados .. nao eh possivel inserir urls neste momento ... \n\r",TALKERNAME);
-	     write_user(user,mess);
-	  }
-	
-	mysql_close(&my_connection);
-     }
-else
-     {   
-	sprintf(mess,"DB CONNECTION FAILED \n");
-	write_syslog(mess,1);
-	if(mysql_errno(&my_connection))
-	  {
-	     sprintf(mess,"Connection Error : %d : %s \n",mysql_errno(&my_connection),mysql_error(&my_connection));
-	     write_syslog(mess,1);
-	  }
-	
-	sprintf(mess,"[%s:ERROR] : impossivel conectar a base de dados ... nao e' possivel adicionar urls neste momento \n",TALKERNAME);
-	write_user(user,mess);
-	return;
-     
-     }
-   
-/* send output */
-write_user(user,"=> Voce adicionou uma URL no talker!\n\r");
-
-}
