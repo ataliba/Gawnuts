@@ -1,0 +1,37 @@
+#!/bin/bash
+
+########################
+
+case $1 in 
+
+"run")
+  echo "=> Going to run the gawnuts talker ..."
+  ./gawnuts
+  ;;
+"kill")
+  echo "=> Going to kill the gawnuts operational system process ... "
+  killall -9 gawnuts
+  ;;
+"all")
+  echo "=> Compiling and run the talker ... "
+  cd src 
+  make 
+  cd ..
+  ./gawnuts
+  ;;
+"compile")
+  echo "=> Compiling the talker ... "
+  cd src 
+  make 
+  cd ..
+  ;;
+*) echo " "
+   echo "=> Options "
+   echo "=> go run - run the talker "
+ echo "=> go kill - kill the gawnuts operational system process ..."
+   echo "=> go all - compiling and run the talker"
+   echo "=> go compile - compile the talker "
+   echo " "
+ ;;
+esac 
+
