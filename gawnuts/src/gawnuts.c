@@ -2011,7 +2011,6 @@ char *inpstr;
 	  {
 	   case '?': strcpy(type,"pergunta");  break;
 	   case '!': strcpy(type,"exclama");  break;
-	   case ')': strcpy(type,"sorri"); break;
 	   default : strcpy(type,"diz");
 	  }
 	
