@@ -11,6 +11,6 @@
  
 // definition of the talker
  
-#define GAWVERSION "0.3"
+#define GAWVERSION "0.4"
 #define TALKERNAME "NerdTalker"
  

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Geek Awsome NUTS v. 0.3 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
+ * Geek Awsome NUTS v. 0.4 - (c) Ataliba Teixeira ( gawnuts@ataliba.eti.br )
  * - This is LICENSED !! Read the LICENSE file to know more about it !!! 
  * - Este software eh licenciado !!! Leia o arquivo LICENSA para maiores 
  *   informacoes
@@ -53,6 +53,8 @@
 #include <time.h>
 #include <dirent.h>
 #include "/usr/include/mysql/mysql.h"
+#include <sys/sysinfo.h>
+#include <sys/time.h>
 
 /*** the configurable libs **/ 
 
@@ -99,6 +101,7 @@
 #define WHATISTHISFILE "whatisthis"
 #define LASTUSERFILE "miscfiles/last_user"
 #define SETFILE "screens/setfile"
+#define UPTIMEFILE "miscfiles/uptime"
 
 #define MAX_LAST_LINES 10
 
