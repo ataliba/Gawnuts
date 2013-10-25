@@ -489,6 +489,7 @@ char type[10];
 switch(inpstr[strlen(inpstr)-1]) {
 	case '?': strcpy(type,"pergunta");  break;
 	case '!': strcpy(type,"exclama");  break;
+	case ':)': strcpy(type,"sorri"); break;
 	default : strcpy(type,"diz");
 	}
 sprintf(mess,"=> Voce %s: %s",type,inpstr);
